@@ -90,6 +90,7 @@
   color: #d8cdbd;
 }
 .admin-tabs a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.admin-tabs a[aria-current="page"] { background: rgba(255, 255, 255, 0.14); color: #fff; }
 .admin-actions { display: flex; align-items: center; gap: 14px; }
 .admin-link { font-size: 12px; letter-spacing: 0.08em; color: #d8cdbd; text-decoration: none; }
 .admin-link:hover { color: #fff; }
@@ -98,9 +99,14 @@
   background: #fdf3d8;
   border-bottom: 1px solid #e8d9a8;
   color: #6b5312;
-  padding: 10px 0;
+  padding: 10px 16px;
   font-size: 13px;
   text-align: center;
+}
+.admin-banner.local {
+  background: #efeae0;
+  border-bottom-color: var(--a-line);
+  color: #4f463c;
 }
 .admin-banner code { background: rgba(0, 0, 0, 0.06); padding: 1px 5px; border-radius: 4px; }
 
@@ -287,7 +293,7 @@
 
 .item {
   display: grid;
-  grid-template-columns: 1fr 120px 90px 150px;
+  grid-template-columns: 1fr 180px 90px 100px;
   gap: 12px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--a-line);
@@ -297,7 +303,9 @@
 .item.paused { opacity: 0.55; }
 .item .name { font-weight: 600; font-size: 14px; margin: 0; }
 .item .desc { font-size: 12.5px; color: var(--a-mute); margin: 2px 0 0; }
-.item .price { font-variant-numeric: tabular-nums; font-size: 14px; }
+.item .price { font-variant-numeric: tabular-nums; font-size: 13.5px; line-height: 1.45; }
+.item .price-lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--a-mute); font-weight: 600; }
+.item .price-sub { color: var(--a-ochre); }
 .item .price span { display: block; font-size: 11px; color: var(--a-mute); font-variant-numeric: normal; }
 .item .acts { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 
@@ -305,7 +313,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  align-items: end;
+  align-items: flex-end;
   padding: 14px 18px;
   background: #fbf8f2;
   border-top: 1px solid var(--a-line);

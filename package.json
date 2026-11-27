@@ -6,7 +6,9 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "test:hours": "tsx lib/hours.test.ts"
+    "test": "npm run test:hours && npm run test:local",
+    "test:hours": "tsx lib/hours.test.ts",
+    "test:local": "tsx lib/local-store.test.ts"
   },
   "dependencies": {
     "next": "15.1.6",

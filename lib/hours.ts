@@ -145,10 +145,18 @@ export const tonightRoom = (at: Date = new Date()) =>
 
 /** Compact week table for the visit panel: groups identical rows. */
 export function weekRows() {
-  const byWindow = new Map<string, string[]>();
+  const byWindow = new Map<string, { days: string[]; dows: number[] }>();
   for (const r of hours) {
     const k = `${h(r.open)} — ${h(r.close)}`;
-    byWindow.set(k, [...(byWindow.get(k) ?? []), r.short]);
+    const prev = byWindow.get(k);
+    byWindow.set(k, {
+      days: [...(prev?.days ?? []), r.short],
+      dows: [...(prev?.dows ?? []), r.dow],
+    });
   }
-  return [...byWindow.entries()].map(([window, days]) => ({ window, days }));
+  return [...byWindow.entries()].map(([window, { days, dows }]) => ({
+    window,
+    days,
+    dows,
+  }));
 }

@@ -1,0 +1,408 @@
+{
+  "_comment": "Official Black Rose Lounge menu transcribed from the 8 venue menu pages. All prices are in ETB and include 15% VAT & 5% Service Charge. Dual-column categories specify price_label (primary: Shot or Full) and secondary_price_label (secondary: Bottle or Half).",
+  "categories": [
+    {
+      "name": "Cocktails",
+      "kicker": "House & classic serves",
+      "note": "Mixed to order at the bar. 15% VAT & 5% service charge included.",
+      "price_label": "Serve",
+      "secondary_price_label": "",
+      "image_url": "/img/figure.jpg",
+      "sort_order": 10,
+      "items": [
+        { "name": "Americano", "price": 1040, "sort_order": 10 },
+        { "name": "Aruba", "price": 2345, "sort_order": 20 },
+        { "name": "Bella Daiquiri", "price": 965, "sort_order": 30 },
+        {
+          "name": "Black Rose",
+          "description": "The house cocktail since 2003 — dark, floral, dry.",
+          "price": 445,
+          "badge": "Signature",
+          "signature": true,
+          "sort_order": 40
+        },
+        { "name": "Black Russian", "price": 620, "sort_order": 50 },
+        { "name": "Blue Lagoon", "price": 620, "sort_order": 60 },
+        { "name": "Blue Hawaiian", "price": 1290, "sort_order": 70 },
+        { "name": "Caipirinha", "price": 790, "sort_order": 80 },
+        { "name": "Caribbean Breeze", "price": 1135, "sort_order": 90 },
+        { "name": "Cosmopolitan", "price": 630, "sort_order": 100 },
+        { "name": "Devil's Margarita", "price": 1465, "sort_order": 110 },
+        { "name": "Espresso Martini", "price": 1175, "sort_order": 120 },
+        { "name": "French Connection", "price": 2145, "sort_order": 130 },
+        { "name": "Hairy Navel", "price": 390, "sort_order": 140 },
+        { "name": "Jungle Bird", "price": 990, "sort_order": 150 },
+        { "name": "Long Island Iced Tea", "price": 1505, "sort_order": 160 },
+        { "name": "London Sour", "price": 1030, "sort_order": 170 },
+        { "name": "Margarita", "price": 1505, "sort_order": 180 },
+        { "name": "Mai Tai", "price": 1070, "sort_order": 190 },
+        { "name": "Manhattan", "price": 1055, "sort_order": 200 },
+        { "name": "Mexicana Classic Mojito", "price": 895, "sort_order": 210 },
+        { "name": "Mint Julep", "price": 635, "sort_order": 220 },
+        { "name": "Mojito", "price": 890, "sort_order": 230 },
+        { "name": "Negroni", "price": 1600, "sort_order": 240 },
+        { "name": "Old Fashioned", "price": 950, "sort_order": 250 },
+        { "name": "Paloma", "price": 1360, "sort_order": 260 },
+        { "name": "Peach Martini", "price": 615, "sort_order": 270 },
+        { "name": "Pineapple Martini", "price": 435, "sort_order": 280 },
+        { "name": "Piña Colada", "price": 1330, "sort_order": 290 },
+        { "name": "Planter's Punch", "price": 1025, "sort_order": 300 },
+        { "name": "Rusty Nail", "price": 890, "sort_order": 310 },
+        { "name": "Russian Assassin", "price": 1045, "sort_order": 320 },
+        { "name": "Screwdriver", "price": 415, "sort_order": 330 },
+        { "name": "Sex on the Beach", "price": 600, "sort_order": 340 },
+        { "name": "Singapore Sling", "price": 755, "sort_order": 350 },
+        { "name": "Strawberry Daiquiri", "price": 985, "sort_order": 360 },
+        { "name": "Strawberry Margarita", "price": 1880, "sort_order": 370 },
+        { "name": "Tequila Sunrise", "price": 1450, "sort_order": 380 },
+        { "name": "Tom Collins", "price": 535, "sort_order": 390 },
+        { "name": "Tropical Margarita", "price": 2180, "sort_order": 400 },
+        { "name": "Whisky Sour", "price": 840, "sort_order": 410 }
+      ]
+    },
+    {
+      "name": "Shots",
+      "kicker": "Bar shots",
+      "note": "Layered and poured to order.",
+      "price_label": "Shot",
+      "secondary_price_label": "",
+      "image_url": "/img/rose-stamp.jpg",
+      "sort_order": 20,
+      "items": [
+        { "name": "B52", "price": 695, "sort_order": 10 },
+        { "name": "Earthquake", "price": 345, "sort_order": 20 }
+      ]
+    },
+    {
+      "name": "Local Wine",
+      "kicker": "Ethiopian bottles",
+      "note": "Imported wine also available — ask your host for tonight's cellar list.",
+      "price_label": "Bottle",
+      "secondary_price_label": "",
+      "image_url": "/img/room.jpg",
+      "sort_order": 30,
+      "items": [
+        {
+          "name": "Castel Cuvée Prestige Dry Red",
+          "description": "Cabernet Franc, Malbec.",
+          "price": 4120,
+          "sort_order": 10
+        },
+        {
+          "name": "Castel Cuvée Prestige Dry White",
+          "description": "Chardonnay, Chenin Blanc.",
+          "price": 4760,
+          "sort_order": 20
+        },
+        {
+          "name": "Rift Valley Dry Red",
+          "description": "Syrah, Malbec, Cabernet Sauvignon.",
+          "price": 2850,
+          "sort_order": 30
+        },
+        {
+          "name": "Rift Valley Dry Rosé",
+          "price": 2850,
+          "sort_order": 40
+        },
+        {
+          "name": "Rift Valley Chenin White",
+          "price": 3510,
+          "sort_order": 50
+        },
+        {
+          "name": "Acacia Medium Sweet White",
+          "price": 3510,
+          "sort_order": 60
+        },
+        {
+          "name": "Acacia Medium Sweet Red / Rosé",
+          "price": 2850,
+          "sort_order": 70
+        },
+        {
+          "name": "Gebeta Red, Rosé & White",
+          "price": 3510,
+          "sort_order": 80
+        }
+      ]
+    },
+    {
+      "name": "Wine by the Glass",
+      "kicker": "Single pours",
+      "note": "Chilled and poured from our local selection.",
+      "price_label": "Glass",
+      "secondary_price_label": "",
+      "image_url": "/img/profile.jpg",
+      "sort_order": 40,
+      "items": [
+        { "name": "Acacia Medium Sweet Red / Rosé", "price": 840, "sort_order": 10 },
+        { "name": "Acacia Medium Sweet White", "price": 1000, "sort_order": 20 },
+        { "name": "Rift Valley Dry Chenin White", "price": 1000, "sort_order": 30 },
+        { "name": "Gebeta Red, Rosé & White", "price": 1000, "sort_order": 40 }
+      ]
+    },
+    {
+      "name": "Champagne & Sparkling",
+      "kicker": "Cellar bottles",
+      "note": "Served chilled in ice.",
+      "price_label": "Bottle",
+      "secondary_price_label": "",
+      "image_url": "/img/watermark.jpg",
+      "sort_order": 50,
+      "items": [
+        { "name": "Moët & Chandon Brut Rosé", "price": 46895, "sort_order": 10 },
+        { "name": "Veuve Clicquot Brut", "price": 52150, "sort_order": 20 },
+        { "name": "G.H. Mumm Brut", "price": 35490, "sort_order": 30 },
+        { "name": "Prosecco Fantinel", "price": 16000, "sort_order": 40 }
+      ]
+    },
+    {
+      "name": "Kitchen",
+      "kicker": "From the kitchen",
+      "note": "Full and half portions available on sandwiches and melts. Kitchen closes 30 minutes before close.",
+      "price_label": "Full",
+      "secondary_price_label": "Half",
+      "image_url": "/img/room.jpg",
+      "sort_order": 60,
+      "items": [
+        { "name": "Cheese Steak", "price": 2795, "secondary_price": 1470, "sort_order": 10 },
+        { "name": "Tuna Melt", "price": 2250, "secondary_price": 1200, "sort_order": 20 },
+        {
+          "name": "Tuna (Fasting)",
+          "price": 1665,
+          "secondary_price": 910,
+          "badge": "Fasting",
+          "sort_order": 30
+        },
+        { "name": "Cheese Melt", "price": 1100, "secondary_price": 620, "sort_order": 40 },
+        { "name": "Beef Cutlet", "price": 1775, "sort_order": 50 },
+        { "name": "Tibs", "price": 2300, "sort_order": 60 },
+        { "name": "Tibs Firfir", "price": 1285, "sort_order": 70 },
+        { "name": "Injera Firfir", "price": 635, "badge": "Fasting", "sort_order": 80 },
+        { "name": "Shiro", "price": 635, "badge": "Fasting", "sort_order": 90 },
+        { "name": "Tomato Salad", "price": 265, "badge": "Fasting", "sort_order": 100 },
+        { "name": "Roasted Potato", "price": 225, "badge": "Fasting", "sort_order": 110 }
+      ]
+    },
+    {
+      "name": "Beer & Soft Drinks",
+      "kicker": "Cold bottles & mixers",
+      "note": "Ethiopian & imported beers, sparkling water, and soft drinks.",
+      "price_label": "Bottle",
+      "secondary_price_label": "",
+      "image_url": "/img/rose-stamp.jpg",
+      "sort_order": 70,
+      "items": [
+        {
+          "name": "Local Beers",
+          "description": "St. George, Castel, Dashen, Habesha, Walia, Harar, or Bedele.",
+          "price": 290,
+          "sort_order": 10
+        },
+        { "name": "Arada", "price": 325, "sort_order": 20 },
+        { "name": "Heineken", "price": 340, "sort_order": 30 },
+        { "name": "Desperados", "price": 365, "sort_order": 40 },
+        {
+          "name": "Soft Drinks & Mixers",
+          "description": "Coca-Cola, Sprite, Tonic, or Ambo.",
+          "price": 180,
+          "sort_order": 50
+        },
+        { "name": "Water", "price": 150, "sort_order": 60 }
+      ]
+    },
+    {
+      "name": "Vodka",
+      "kicker": "By the shot or bottle",
+      "note": "Two columns show single shot price and full bottle price.",
+      "price_label": "Shot",
+      "secondary_price_label": "Bottle",
+      "image_url": "/img/profile.jpg",
+      "sort_order": 80,
+      "items": [
+        { "name": "Smirnoff", "price": 295, "secondary_price": 8230, "sort_order": 10 },
+        { "name": "Stolichnaya", "price": 400, "secondary_price": 10990, "sort_order": 20 },
+        { "name": "Winter Palace", "price": 280, "secondary_price": 7450, "sort_order": 30 },
+        { "name": "Absolut", "price": 570, "secondary_price": 15460, "sort_order": 40 },
+        { "name": "Cîroc", "price": 940, "secondary_price": 26530, "sort_order": 50 },
+        { "name": "Grey Goose", "price": 1320, "secondary_price": 37020, "sort_order": 60 }
+      ]
+    },
+    {
+      "name": "Gin",
+      "kicker": "By the shot or bottle",
+      "note": "Two columns show single shot price and full bottle price.",
+      "price_label": "Shot",
+      "secondary_price_label": "Bottle",
+      "image_url": "/img/figure.jpg",
+      "sort_order": 90,
+      "items": [
+        { "name": "Beefeater", "price": 515, "secondary_price": 14550, "sort_order": 10 },
+        { "name": "Tanqueray", "price": 670, "secondary_price": 19010, "sort_order": 20 },
+        { "name": "Gordon's", "price": 515, "secondary_price": 14630, "sort_order": 30 },
+        { "name": "Bombay Sapphire", "price": 580, "secondary_price": 16480, "sort_order": 40 },
+        { "name": "Hendrick's", "price": 1070, "secondary_price": 30000, "sort_order": 50 }
+      ]
+    },
+    {
+      "name": "Rum",
+      "kicker": "By the shot or bottle",
+      "note": "Two columns show single shot price and full bottle price.",
+      "price_label": "Shot",
+      "secondary_price_label": "Bottle",
+      "image_url": "/img/room.jpg",
+      "sort_order": 100,
+      "items": [
+        { "name": "Bacardi Gold", "price": 630, "secondary_price": 17910, "sort_order": 10 },
+        { "name": "Bacardi White", "price": 735, "secondary_price": 20290, "sort_order": 20 },
+        { "name": "Captain Morgan", "price": 560, "secondary_price": 15750, "sort_order": 30 },
+        { "name": "Havana Club", "price": 400, "secondary_price": 8000, "sort_order": 40 },
+        { "name": "Malibu", "price": 570, "secondary_price": 16020, "sort_order": 50 },
+        { "name": "Negrita", "price": 330, "secondary_price": 7000, "sort_order": 60 }
+      ]
+    },
+    {
+      "name": "Tequila",
+      "kicker": "By the shot or bottle",
+      "note": "Two columns show single shot price and full bottle price.",
+      "price_label": "Shot",
+      "secondary_price_label": "Bottle",
+      "image_url": "/img/watermark.jpg",
+      "sort_order": 110,
+      "items": [
+        { "name": "Camino", "price": 915, "secondary_price": 18880, "sort_order": 10 },
+        { "name": "Casamigos Silver", "price": 2020, "secondary_price": 56680, "sort_order": 20 },
+        { "name": "Casamigos Gold", "price": 3190, "secondary_price": 89460, "sort_order": 30 },
+        { "name": "Don Julio", "price": 2720, "secondary_price": 56010, "sort_order": 40 },
+        { "name": "Don Julio Blanco", "price": 2660, "secondary_price": 54770, "sort_order": 50 },
+        { "name": "Patrón Silver", "price": 1995, "secondary_price": 56030, "sort_order": 60 },
+        { "name": "Patrón Gold", "price": 2520, "secondary_price": 70510, "sort_order": 70 }
+      ]
+    },
+    {
+      "name": "Whisky",
+      "kicker": "Blended, Irish & Bourbon",
+      "note": "Single shot and full bottle pricing. 15% VAT & 5% service charge included.",
+      "price_label": "Shot",
+      "secondary_price_label": "Bottle",
+      "image_url": "/img/room.jpg",
+      "sort_order": 120,
+      "items": [
+        { "name": "White Horse", "price": 550, "secondary_price": 13900, "sort_order": 10 },
+        { "name": "Red Label", "price": 530, "secondary_price": 15000, "sort_order": 20 },
+        { "name": "Black Label", "price": 900, "secondary_price": 24800, "sort_order": 30 },
+        { "name": "Double Black", "price": 980, "secondary_price": 27600, "sort_order": 40 },
+        { "name": "Gold Label", "price": 1485, "secondary_price": 41720, "sort_order": 50 },
+        { "name": "Chivas Regal", "price": 670, "secondary_price": 18920, "sort_order": 60 },
+        { "name": "Jameson", "price": 720, "secondary_price": 20390, "sort_order": 70 },
+        { "name": "Jack Daniel's", "price": 985, "secondary_price": 27670, "sort_order": 80 },
+        { "name": "J&B", "price": 500, "secondary_price": 14170, "sort_order": 90 },
+        { "name": "Grant's", "price": 340, "secondary_price": 9660, "sort_order": 100 },
+        { "name": "Maker's Mark", "price": 1390, "secondary_price": 43050, "sort_order": 110 },
+        { "name": "Blue Label", "price": 3605, "secondary_price": 60130, "sort_order": 120 }
+      ]
+    },
+    {
+      "name": "Single Malt Whisky",
+      "kicker": "Scotch & malt cellar",
+      "note": "Single shot and full bottle pricing. 15% VAT & 5% service charge included.",
+      "price_label": "Shot",
+      "secondary_price_label": "Bottle",
+      "image_url": "/img/profile.jpg",
+      "sort_order": 130,
+      "items": [
+        { "name": "Monkey Shoulder", "price": 960, "secondary_price": 26800, "sort_order": 10 },
+        { "name": "Glenfiddich 12yr", "price": 1420, "secondary_price": 39860, "sort_order": 20 },
+        { "name": "Glenfiddich 15yr", "price": 1880, "secondary_price": 48950, "sort_order": 30 },
+        { "name": "Glenfiddich 18yr (70cl)", "price": 3020, "secondary_price": 56540, "sort_order": 40 },
+        { "name": "Laphroaig 10yr", "price": 1625, "secondary_price": 30370, "sort_order": 50 },
+        { "name": "Glenlivet 12yr", "price": 750, "secondary_price": 22630, "sort_order": 60 },
+        { "name": "Glenlivet 15yr", "price": 1250, "secondary_price": 35010, "sort_order": 70 },
+        { "name": "Glenlivet 18yr (70cl)", "price": 2145, "secondary_price": 41950, "sort_order": 80 }
+      ]
+    },
+    {
+      "name": "Cognac",
+      "kicker": "After-dinner pours",
+      "note": "Single shot and full bottle pricing. 15% VAT & 5% service charge included.",
+      "price_label": "Shot",
+      "secondary_price_label": "Bottle",
+      "image_url": "/img/rose-stamp.jpg",
+      "sort_order": 140,
+      "items": [
+        { "name": "Rémy Martin XO", "price": 4350, "secondary_price": 81310, "sort_order": 10 },
+        { "name": "Rémy Martin VSOP", "price": 2015, "secondary_price": 55000, "sort_order": 20 },
+        { "name": "Courvoisier VS", "price": 1050, "secondary_price": 26780, "sort_order": 30 },
+        { "name": "Hennessy", "price": 1995, "secondary_price": 53300, "sort_order": 40 }
+      ]
+    },
+    {
+      "name": "Friday Happy Hour — Cocktails & Kitchen",
+      "kicker": "Fridays only",
+      "note": "Special Friday Happy Hour pricing on selected cocktails and Zilzil Tibs.",
+      "price_label": "Happy Hour",
+      "secondary_price_label": "",
+      "image_url": "/img/watermark.jpg",
+      "sort_order": 150,
+      "items": [
+        { "name": "B52", "price": 556, "badge": "Cocktail", "sort_order": 10 },
+        { "name": "Black Rose", "price": 356, "badge": "Signature", "signature": true, "sort_order": 20 },
+        { "name": "Black Russian", "price": 496, "badge": "Cocktail", "sort_order": 30 },
+        { "name": "Blue Lagoon", "price": 496, "badge": "Cocktail", "sort_order": 40 },
+        { "name": "Blue Hawaiian", "price": 1032, "badge": "Cocktail", "sort_order": 50 },
+        { "name": "Caipirinha", "price": 632, "badge": "Cocktail", "sort_order": 60 },
+        { "name": "Caribbean Breeze", "price": 908, "badge": "Cocktail", "sort_order": 70 },
+        { "name": "Cosmopolitan", "price": 504, "badge": "Cocktail", "sort_order": 80 },
+        { "name": "London Sour", "price": 824, "badge": "Cocktail", "sort_order": 90 },
+        { "name": "Long Island Iced Tea", "price": 1205, "badge": "Cocktail", "sort_order": 100 },
+        { "name": "Mai Tai", "price": 856, "badge": "Cocktail", "sort_order": 110 },
+        { "name": "Margarita", "price": 1205, "badge": "Cocktail", "sort_order": 120 },
+        { "name": "Manhattan", "price": 844, "badge": "Cocktail", "sort_order": 130 },
+        { "name": "Mint Julep", "price": 508, "badge": "Cocktail", "sort_order": 140 },
+        { "name": "Mojito", "price": 712, "badge": "Cocktail", "sort_order": 150 },
+        { "name": "Old Fashioned", "price": 760, "badge": "Cocktail", "sort_order": 160 },
+        { "name": "Pineapple Martini", "price": 348, "badge": "Cocktail", "sort_order": 170 },
+        { "name": "Peach Martini", "price": 492, "badge": "Cocktail", "sort_order": 180 },
+        { "name": "Piña Colada", "price": 1064, "badge": "Cocktail", "sort_order": 190 },
+        { "name": "Planter's Punch", "price": 820, "badge": "Cocktail", "sort_order": 200 },
+        { "name": "Russian Assassin", "price": 836, "badge": "Cocktail", "sort_order": 210 },
+        { "name": "Screwdriver", "price": 415, "badge": "Cocktail", "sort_order": 220 },
+        { "name": "Zilzil Tibs", "price": 1790, "badge": "Food", "sort_order": 230 }
+      ]
+    },
+    {
+      "name": "Friday Happy Hour — Spirits & Beers",
+      "kicker": "Fridays only",
+      "note": "Friday Happy Hour single pours, local beers, and soft drinks.",
+      "price_label": "Happy Hour",
+      "secondary_price_label": "",
+      "image_url": "/img/figure.jpg",
+      "sort_order": 160,
+      "items": [
+        { "name": "Smirnoff", "price": 260, "badge": "Vodka", "sort_order": 10 },
+        { "name": "Stolichnaya", "price": 320, "badge": "Vodka", "sort_order": 20 },
+        { "name": "Winter Palace", "price": 225, "badge": "Vodka", "sort_order": 30 },
+        { "name": "Absolut", "price": 460, "badge": "Vodka", "sort_order": 40 },
+        { "name": "Beefeater", "price": 415, "badge": "Gin", "sort_order": 50 },
+        { "name": "Gordon's", "price": 415, "badge": "Gin", "sort_order": 60 },
+        { "name": "Bacardi Gold", "price": 590, "badge": "Rum", "sort_order": 70 },
+        { "name": "Captain Morgan Gold", "price": 450, "badge": "Rum", "sort_order": 80 },
+        { "name": "Havana Club", "price": 320, "badge": "Rum", "sort_order": 90 },
+        { "name": "Malibu", "price": 460, "badge": "Rum", "sort_order": 100 },
+        { "name": "Red Label", "price": 425, "badge": "Whisky", "sort_order": 110 },
+        { "name": "White Horse", "price": 440, "badge": "Whisky", "sort_order": 120 },
+        { "name": "Jameson", "price": 580, "badge": "Whisky", "sort_order": 130 },
+        { "name": "J&B", "price": 400, "badge": "Whisky", "sort_order": 140 },
+        { "name": "Grant's", "price": 275, "badge": "Whisky", "sort_order": 150 },
+        { "name": "Soft Drink", "price": 145, "badge": "Soft", "sort_order": 160 },
+        { "name": "Water", "price": 120, "badge": "Soft", "sort_order": 170 },
+        { "name": "St. George", "price": 232, "badge": "Beer", "sort_order": 180 },
+        { "name": "Castel", "price": 232, "badge": "Beer", "sort_order": 190 },
+        { "name": "Habesha", "price": 232, "badge": "Beer", "sort_order": 200 },
+        { "name": "Walia", "price": 232, "badge": "Beer", "sort_order": 210 },
+        { "name": "Dashen", "price": 232, "badge": "Beer", "sort_order": 220 }
+      ]
+    }
+  ]
+}

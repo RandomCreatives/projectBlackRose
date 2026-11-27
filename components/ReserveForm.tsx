@@ -1,23 +1,19 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { venue, guestOptions, nightOptions, timeOptions } from "@/content/site";
 
 type State = "idle" | "sending" | "sent" | "error";
 
-export default function ReserveForm() {
+export default function ReserveForm({
+  defaultNight = nightOptions[0].label,
+}: {
+  defaultNight?: string;
+}) {
   const [state, setState] = useState<State>("idle");
   const [errors, setErrors] = useState<string[]>([]);
   const [reference, setReference] = useState<string | null>(null);
   const [name, setName] = useState("");
   const sentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    document.querySelectorAll<HTMLSelectElement>(".field select").forEach((s) => {
-      const mark = () => s.classList.add("filled");
-      mark();
-      s.addEventListener("change", mark);
-    });
-  }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -101,7 +97,7 @@ export default function ReserveForm() {
 
       <div className="row2">
         <div className="field">
-          <select id="guests" name="guests" defaultValue={guestOptions[1]}>
+          <select id="guests" name="guests" className="filled" defaultValue={guestOptions[1]}>
             {guestOptions.map((g) => (
               <option key={g}>{g}</option>
             ))}
@@ -109,7 +105,7 @@ export default function ReserveForm() {
           <label htmlFor="guests">Guests</label>
         </div>
         <div className="field">
-          <select id="night" name="night" defaultValue={nightOptions[0].label}>
+          <select id="night" name="night" className="filled" defaultValue={defaultNight}>
             {nightOptions.map((n) => (
               <option key={n.value}>{n.label}</option>
             ))}
@@ -119,7 +115,7 @@ export default function ReserveForm() {
       </div>
 
       <div className="field">
-        <select id="time" name="time" defaultValue={timeOptions[1]}>
+        <select id="time" name="time" className="filled" defaultValue={timeOptions[1]}>
           {timeOptions.map((t) => (
             <option key={t}>{t}</option>
           ))}

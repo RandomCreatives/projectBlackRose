@@ -6,20 +6,22 @@ Concept **B** from the design phase, productionised. The static concept in
 `/home/user/blackrose_concept_b.html` stays the design reference; this repo is the site.
 
 ```bash
+cp .env.example .env.local
 npm install
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3000 (persists menu + bookings in .data/ without Supabase)
 npm run build && npm start
-npm run test:hours # the "open now" clock · 11 cases
+npm test           # hours clock + local-store CRUD assertions
 ```
 
 ## Two front doors
 
 | Route | Who | What |
 | --- | --- | --- |
-| `/` | guests | the lounge: hero, room, menu, the week, inside, reserve |
+| `/` | guests | the lounge: hero, room, interactive digital menu book, the week, inside, reserve |
+| `/menu` | guests (QR / table) | standalone full-screen interactive flipbook digital menu |
 | `/admin/login` | the owners | password, 12-hour session |
 | `/admin/bookings` | the owners | table requests, status, call-back numbers |
-| `/admin/menu` | the owners | add / edit / hide / delete categories, items and prices |
+| `/admin/menu` | the owners | add / edit / hide / delete chapters, items, Shot/Bottle & Full/Half prices |
 
 The admin is a different room on purpose: daylight-legible, no glass, no animation, no
 brand ornament. The site's decorative layers are scoped to a `.site` wrapper in the
@@ -30,11 +32,14 @@ brand ornament. The site's decorative layers are scoped to a `.site` wrapper in 
 | Path | What |
 | --- | --- |
 | `content/site.ts` | **Everything static the owners change**: address, phones, hours, the week, gallery captions, socials. |
+| `content/blackrose-menu.json` | Official 16-chapter, 169-item Black Rose menu (auto-seeds local dev `.data/menu.json` and works with `import-menu.ts`). |
+| `components/DigitalMenuBook.tsx` | Interactive editorial flipbook menu (cover, two-page chapter spreads, 3D corner drag/swipe, live search, Shot/Bottle & Full/Half columns). |
 | `lib/hours.ts` | `venueStatus()` — open/closed in East Africa Time, past-midnight spill included. |
 | `lib/menu.ts` | Menu read + `formatPrice` / `parsePrice` (minor units, no float money). |
 | `lib/supabase.ts` | Server-only REST client. Service-role key never reaches the browser. |
 | `lib/auth.ts` | Signed-cookie session (HMAC + expiry, constant-time compare). |
-| `lib/store.ts` | Reservation write path: Supabase, or a JSONL file in dev. |
+| `lib/store.ts` | Reservation read/write path: Supabase, or `.data/reservations.json` in local dev. |
+| `lib/local-store.ts` | Atomic JSON persistence in `.data/` for local development (menu + bookings). |
 | `app/api/reservations` | Public form endpoint: validate → throttle → persist → `BR-XXXXX`. |
 | `app/api/admin/login` | Password → session cookie. JSON or form POST. |
 | `app/admin/actions.ts` | All admin mutations, each re-checking the session. |
@@ -52,10 +57,13 @@ A unique index on `(category_id, lower(name))` makes a double-clicked "Add" impo
 Re-importing the same JSON updates prices rather than duplicating the menu.
 
 ```bash
-npx tsx scripts/import-menu.ts my-menu.json --dry-run   # see what would change
-npx tsx scripts/import-menu.ts my-menu.json             # add / update
-npx tsx scripts/import-menu.ts my-menu.json --replace   # wipe and reload
+npx tsx scripts/import-menu.ts content/blackrose-menu.json --dry-run   # see what would change
+npx tsx scripts/import-menu.ts content/blackrose-menu.json             # add / update
+npx tsx scripts/import-menu.ts content/blackrose-menu.json --replace   # wipe and reload
 ```
+
+When connecting Supabase later, apply both migrations in `supabase/migrations/`
+(`0001_reservations.sql` and `0002_digital_menu_columns.sql`), then run the importer above.
 
 ## Booking flow
 
@@ -79,8 +87,10 @@ Personal data: the form promises deletion 30 days after the night; `purge_old_re
 | `ADMIN_PASSWORD` | Vercel | the owners' shared password — change before launch |
 | `ADMIN_SESSION_SECRET` | Vercel | ≥16 chars, random; rotating it signs everyone out |
 
-Without Supabase credentials the site still renders (menu falls back to the Black Rose), but
-production **refuses to accept a booking** rather than silently dropping it.
+In local development without Supabase credentials, both the menu and bookings run against
+atomic JSON files in `.data/` (auto-seeded with starter serves on first load). In
+production without Supabase, the site falls back to the Black Rose on the menu and **refuses
+to accept a booking** rather than silently dropping it.
 
 ## Accessibility & SEO
 
@@ -94,8 +104,6 @@ checked to AA (the concept's two failing footer greys were lifted). `BarOrPub` J
 
 - The **weekly programme** (Tue vinyl / Thu salon / Fri–Sat after eleven) is a proposal from
   review language, not a published schedule. Flagged on the page.
-- **Menu prices** currently in the database are placeholders until the owners' list lands.
-  Only the *Black Rose* name is real.
 - **WhatsApp** and **Instagram** — no confirmed number or handle, so neither appears.
 - Room photography is to be replaced with the owners' own shoot; the mural artwork is the
   venue's own and is used as designed.

@@ -40,7 +40,12 @@ export function verifyToken(token: string | undefined): boolean {
   const parts = token.split(".");
   if (parts.length !== 3) return false;
   const [exp, nonce, sig] = parts;
-  const expected = sign(`${exp}.${nonce}`);
+  let expected: string;
+  try {
+    expected = sign(`${exp}.${nonce}`);
+  } catch {
+    return false;
+  }
   const a = Buffer.from(sig);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
@@ -58,13 +63,51 @@ export function checkPassword(input: string): boolean {
   return timingSafeEqual(da, db) && a.length === b.length;
 }
 
+/**
+ * Cookie attributes for the admin session:
+ * - Production: `SameSite=Lax; Secure` (standard CSRF protection).
+ * - Dev over HTTPS proxy (e.g. embedded live preview): `SameSite=None; Secure`
+ *   so the admin login session works inside cross-origin preview iframes.
+ * - Dev over plain HTTP localhost: `SameSite=Lax; Secure=false`.
+ */
+export function sessionCookieOptions(req?: Request) {
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd) {
+    return {
+      httpOnly: true,
+      sameSite: "lax" as const,
+      secure: true,
+      path: "/",
+    };
+  }
+  const forwardedProto = req?.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const isHttps = forwardedProto === "https" || req?.url.startsWith("https://");
+  return {
+    httpOnly: true,
+    sameSite: (isHttps ? "none" : "lax") as "none" | "lax",
+    secure: Boolean(isHttps),
+    path: "/",
+  };
+}
+
+/** Build a proxy-safe base origin so redirects never point at 0.0.0.0 / internal ports. */
+export function requestOrigin(req: Request): string {
+  const host =
+    req.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    req.headers.get("host");
+  if (host) {
+    const proto =
+      req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
+      (req.url.startsWith("https://") ? "https" : "http");
+    return `${proto}://${host}`;
+  }
+  return new URL(req.url).origin;
+}
+
 export async function setSession() {
   const jar = await cookies();
   jar.set(COOKIE, issueToken(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
+    ...sessionCookieOptions(),
     maxAge: MAX_AGE_S,
   });
 }

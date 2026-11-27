@@ -56,14 +56,21 @@ export const hours = [
   { dow: 6, open: 17 * 60, close: 26 * 60, label: "Saturday", short: "Sat" },
 ] as const;
 
+const hhmm = (mins: number) => {
+  const m = ((mins % 1440) + 1440) % 1440;
+  const hh = String(Math.floor(m / 60)).padStart(2, "0");
+  const mm = String(m % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+};
+
 /** schema.org openingHoursSpecification, derived from `hours` so the two can never drift. */
 export const openingHoursSpec = hours.map((h) => {
   const day = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][h.dow];
   return {
     "@type": "OpeningHoursSpecification",
     dayOfWeek: `https://schema.org/${day}`,
-    opens: "17:00",
-    closes: h.close >= 24 * 60 ? "02:00" : "00:30",
+    opens: hhmm(h.open),
+    closes: hhmm(h.close),
   };
 });
 
