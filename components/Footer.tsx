@@ -29,7 +29,6 @@ export default function Footer() {
                   {n.label}
                 </a>
               ))}
-              <a href="/menu">Digital Menu</a>
             </div>
             <div>
               <h4>Elsewhere</h4>

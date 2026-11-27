@@ -142,7 +142,7 @@ export const gallery = [
 
 export const nav = [
   { href: "#room", label: "The Room" },
-  { href: "#menu", label: "Menu" },
+  { href: "/menu", label: "Menu" },
   { href: "#week", label: "The Week" },
   { href: "#visit", label: "Find Us" },
 ] as const;

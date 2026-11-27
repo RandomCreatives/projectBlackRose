@@ -18,10 +18,12 @@ export type LocalMenuCategory = {
 export type LocalMenuItem = {
   id: string;
   category_id: string | null;
+  group_name: string;
   name: string;
   description: string;
   price_cents: number | null;
   secondary_price_cents: number | null;
+  happy_hour_price_cents: number | null;
   price_note: string;
   currency: string;
   badge: string;
@@ -92,9 +94,11 @@ const slug = (s: string) =>
 
 type SeedItem = {
   name: string;
+  group_name?: string;
   description?: string;
   price?: number | null;
   secondary_price?: number | null;
+  happy_hour_price?: number | null;
   price_note?: string;
   badge?: string;
   signature?: boolean;
@@ -135,9 +139,11 @@ function defaultMenuSeed(): MenuFile {
 
     for (let ii = 0; ii < (c.items ?? []).length; ii++) {
       const it = c.items![ii];
+      const groupSlug = it.group_name ? `-${slug(it.group_name)}` : "";
       items.push({
-        id: `item-${slug(c.name)}-${slug(it.name) || ii + 1}`,
+        id: `item-${slug(c.name)}${groupSlug}-${slug(it.name) || ii + 1}`,
         category_id: catId,
+        group_name: it.group_name ?? "",
         name: it.name,
         description: it.description ?? "",
         price_cents:
@@ -145,6 +151,10 @@ function defaultMenuSeed(): MenuFile {
         secondary_price_cents:
           typeof it.secondary_price === "number"
             ? Math.round(it.secondary_price * 100)
+            : null,
+        happy_hour_price_cents:
+          typeof it.happy_hour_price === "number"
+            ? Math.round(it.happy_hour_price * 100)
             : null,
         price_note: it.price_note ?? "",
         currency: "ETB",
@@ -177,10 +187,12 @@ function normalizeItem(i: Partial<LocalMenuItem>): LocalMenuItem {
   return {
     id: i.id ?? randomUUID(),
     category_id: i.category_id ?? null,
+    group_name: i.group_name ?? "",
     name: i.name ?? "",
     description: i.description ?? "",
     price_cents: i.price_cents ?? null,
     secondary_price_cents: i.secondary_price_cents ?? null,
+    happy_hour_price_cents: i.happy_hour_price_cents ?? null,
     price_note: i.price_note ?? "",
     currency: i.currency ?? "ETB",
     badge: i.badge ?? "",
@@ -272,32 +284,42 @@ function assertUniqueItemName(
   items: LocalMenuItem[],
   categoryId: string | null,
   name: string,
+  groupName: string,
   excludeId?: string,
 ) {
   if (!categoryId) return;
   const target = name.trim().toLowerCase();
+  const targetGroup = groupName.trim().toLowerCase();
   const conflict = items.some(
     (item) =>
       item.id !== excludeId &&
       item.category_id === categoryId &&
-      item.name.trim().toLowerCase() === target,
+      item.name.trim().toLowerCase() === target &&
+      item.group_name.trim().toLowerCase() === targetGroup,
   );
   if (conflict) {
     throw new Error(
-      `local 23505: duplicate item "${name}" in category ${categoryId}`,
+      `local 23505: duplicate item "${name}" in category ${categoryId} (group "${groupName}")`,
     );
   }
 }
 
 export async function localCreateItem(
-  input: Omit<LocalMenuItem, "id" | "currency"> & { currency?: string },
+  input: Omit<LocalMenuItem, "id" | "currency" | "group_name" | "happy_hour_price_cents"> & {
+    currency?: string;
+    group_name?: string;
+    happy_hour_price_cents?: number | null;
+  },
 ): Promise<LocalMenuItem> {
   return withLock(menuFilePath(), async () => {
     const data = await readMenuFile();
-    assertUniqueItemName(data.items, input.category_id, input.name);
+    const groupName = input.group_name ?? "";
+    assertUniqueItemName(data.items, input.category_id, input.name, groupName);
     const item: LocalMenuItem = {
       id: randomUUID(),
       currency: input.currency ?? "ETB",
+      group_name: groupName,
+      happy_hour_price_cents: input.happy_hour_price_cents ?? null,
       ...input,
     };
     data.items.push(item);
@@ -315,7 +337,7 @@ export async function localUpdateItem(
     const idx = data.items.findIndex((i) => i.id === id);
     if (idx === -1) return null;
     const next = { ...data.items[idx], ...patch };
-    assertUniqueItemName(data.items, next.category_id, next.name, id);
+    assertUniqueItemName(data.items, next.category_id, next.name, next.group_name, id);
     data.items[idx] = next;
     await atomicWriteJson(menuFilePath(), data);
     return next;

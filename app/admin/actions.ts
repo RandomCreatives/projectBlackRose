@@ -139,10 +139,12 @@ export async function createItem(fd: FormData) {
   try {
     await createMenuItem({
       category_id: str(fd, "category_id", 80) || null,
+      group_name: str(fd, "group_name", 40),
       name,
       description: str(fd, "description", 300),
       price_cents: parsePrice(str(fd, "price", 20)),
       secondary_price_cents: parsePrice(str(fd, "secondary_price", 20)),
+      happy_hour_price_cents: parsePrice(str(fd, "happy_hour_price", 20)),
       price_note: str(fd, "price_note", 60),
       badge: str(fd, "badge", 40),
       is_signature: bool(fd, "is_signature"),
@@ -150,8 +152,7 @@ export async function createItem(fd: FormData) {
       sort_order: int(fd, "sort_order", 100),
     });
   } catch (err) {
-    // 23505 = a serve with that name is already in this category. That is the correct
-    // outcome of a double-click; nothing to do but refresh.
+    // 23505 = a serve with that name is already in this category & sub-heading.
     if (!(err instanceof Error) || !err.message.includes("23505")) throw err;
   }
   revalidateMenu();
@@ -164,10 +165,12 @@ export async function updateItem(fd: FormData) {
   try {
     await updateMenuItem(id, {
       category_id: str(fd, "category_id", 80) || null,
+      group_name: str(fd, "group_name", 40),
       name: str(fd, "name", 80),
       description: str(fd, "description", 300),
       price_cents: parsePrice(str(fd, "price", 20)),
       secondary_price_cents: parsePrice(str(fd, "secondary_price", 20)),
+      happy_hour_price_cents: parsePrice(str(fd, "happy_hour_price", 20)),
       price_note: str(fd, "price_note", 60),
       badge: str(fd, "badge", 40),
       is_signature: bool(fd, "is_signature"),

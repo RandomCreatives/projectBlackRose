@@ -32,9 +32,9 @@ brand ornament. The site's decorative layers are scoped to a `.site` wrapper in 
 | Path | What |
 | --- | --- |
 | `content/site.ts` | **Everything static the owners change**: address, phones, hours, the week, gallery captions, socials. |
-| `content/blackrose-menu.json` | Official 16-chapter, 169-item Black Rose menu (auto-seeds local dev `.data/menu.json` and works with `import-menu.ts`). |
-| `components/DigitalMenuBook.tsx` | Interactive editorial flipbook menu (cover, two-page chapter spreads, 3D corner drag/swipe, live search, Shot/Bottle & Full/Half columns). |
-| `lib/hours.ts` | `venueStatus()` — always shows "Open"; the real 5pm hours live in the data.
+| `content/blackrose-menu.json` | Official 6-chapter, 125-item Black Rose menu with sub-headings, Shot/Bottle & Full/Half columns, inline Friday Happy Hour prices, and bespoke chapter plates. |
+| `components/DigitalMenuBook.tsx` | Interactive editorial flipbook menu (cover, 7 two-page chapter spreads including live-compiled Friday Happy Hour, 3D corner drag/swipe, live search). |
+| `lib/hours.ts` | `venueStatus()` — open/closed in East Africa Time, past-midnight spill included. |
 | `lib/menu.ts` | Menu read + `formatPrice` / `parsePrice` (minor units, no float money). |
 | `lib/supabase.ts` | Server-only REST client. Service-role key never reaches the browser. |
 | `lib/auth.ts` | Signed-cookie session (HMAC + expiry, constant-time compare). |

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { venue } from "@/content/site";
 import { tonightRoom, type Status } from "@/lib/hours";
 
@@ -50,9 +51,9 @@ export default function Hero({ initial, initialRoom }: { initial: Status; initia
           <a className="btn solid" href="#visit">
             Reserve a table <span className="arw">→</span>
           </a>
-          <a className="btn" href="#menu">
-            See the menu
-          </a>
+          <Link className="btn" href="/menu">
+            Open the menu
+          </Link>
         </div>
 
         <div className="tonight rv" style={{ transitionDelay: ".72s" }}>

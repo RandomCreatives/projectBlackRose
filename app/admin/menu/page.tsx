@@ -24,12 +24,18 @@ const priceText = (cents: number | null, currency: string) =>
   formatPrice(cents, currency) ?? "—";
 
 const IMAGE_PRESETS = [
-  { value: "", label: "Default chapter image" },
-  { value: "/img/figure.jpg", label: "Mural figure" },
-  { value: "/img/room.jpg", label: "Lounge room" },
-  { value: "/img/profile.jpg", label: "Mural profile" },
-  { value: "/img/rose-stamp.jpg", label: "Black rose stamp" },
-  { value: "/img/watermark.jpg", label: "Mural watermark" },
+  { value: "", label: "Default chapter plate" },
+  { value: "/img/menu/chapter-cocktails.jpg", label: "Plate — Cocktails" },
+  { value: "/img/menu/chapter-wine.jpg", label: "Plate — Wine" },
+  { value: "/img/menu/chapter-spirits.jpg", label: "Plate — Spirits" },
+  { value: "/img/menu/chapter-whisky.jpg", label: "Plate — Whisky & Cognac" },
+  { value: "/img/menu/chapter-food.jpg", label: "Plate — Kitchen / Food" },
+  { value: "/img/menu/chapter-beer.jpg", label: "Plate — Beer & Soft Drinks" },
+  { value: "/img/menu/chapter-happyhour.jpg", label: "Plate — Friday Happy Hour" },
+  { value: "/img/menu/cover-pour.jpg", label: "Cover — Cocktail Pour" },
+  { value: "/img/menu/cover-table.jpg", label: "Cover — Candlelit Table" },
+  { value: "/img/room.jpg", label: "Venue — Lounge room" },
+  { value: "/img/figure.jpg", label: "Mural — Figure" },
 ];
 
 function MenuItemRow({
@@ -50,6 +56,7 @@ function MenuItemRow({
       <div>
         <p className="name">
           {item.name}{" "}
+          {item.group_name ? <span className="chip">{item.group_name}</span> : null}
           {item.badge ? <span className="chip">{item.badge}</span> : null}
           {item.is_signature && item.badge.toLowerCase() !== "signature" ? (
             <span className="chip requested">Signature</span>
@@ -80,6 +87,12 @@ function MenuItemRow({
                 {priceText(item.secondary_price_cents, item.currency)}
               </div>
             ) : null}
+            {item.happy_hour_price_cents !== null ? (
+              <div className="price-sub">
+                <small className="price-lbl">Fri HH: </small>
+                {priceText(item.happy_hour_price_cents, item.currency)}
+              </div>
+            ) : null}
             {item.price_note ? <span>{item.price_note}</span> : null}
           </>
         )}
@@ -90,10 +103,21 @@ function MenuItemRow({
           <summary>Edit</summary>
           <form action={updateItem} className="admin-form" style={{ marginTop: 8 }}>
             <input type="hidden" name="id" value={item.id} />
-            <label className="admin-field">
-              <span>Name</span>
-              <input name="name" defaultValue={item.name} required maxLength={80} />
-            </label>
+            <div className="admin-grid2">
+              <label className="admin-field">
+                <span>Name</span>
+                <input name="name" defaultValue={item.name} required maxLength={80} />
+              </label>
+              <label className="admin-field">
+                <span>Sub-heading (group)</span>
+                <input
+                  name="group_name"
+                  defaultValue={item.group_name}
+                  maxLength={40}
+                  placeholder="Vodka / Single malt / By the glass"
+                />
+              </label>
+            </div>
             <label className="admin-field">
               <span>Description</span>
               <textarea name="description" defaultValue={item.description} maxLength={300} />
@@ -122,16 +146,20 @@ function MenuItemRow({
                 />
               </label>
               <label className="admin-field">
-                <span>Price note</span>
+                <span>Fri Happy Hour ({item.currency})</span>
                 <input
-                  name="price_note"
-                  defaultValue={item.price_note}
-                  maxLength={60}
+                  name="happy_hour_price"
+                  inputMode="decimal"
+                  defaultValue={
+                    item.happy_hour_price_cents === null
+                      ? ""
+                      : item.happy_hour_price_cents / 100
+                  }
                   placeholder="optional"
                 />
               </label>
             </div>
-            <div className="admin-grid2">
+            <div className="admin-grid3">
               <label className="admin-field">
                 <span>Category</span>
                 <select name="category_id" defaultValue={item.category_id ?? ""}>
@@ -146,6 +174,15 @@ function MenuItemRow({
               <label className="admin-field">
                 <span>Badge</span>
                 <input name="badge" defaultValue={item.badge} maxLength={40} placeholder="Signature / Fasting" />
+              </label>
+              <label className="admin-field">
+                <span>Price note</span>
+                <input
+                  name="price_note"
+                  defaultValue={item.price_note}
+                  maxLength={60}
+                  placeholder="optional"
+                />
               </label>
             </div>
             <div className="admin-grid2">
@@ -373,6 +410,10 @@ export default async function MenuPage() {
                   <input name="name" required maxLength={80} placeholder="Name" />
                 </label>
                 <label className="admin-field">
+                  <span>Sub-heading</span>
+                  <input name="group_name" maxLength={40} placeholder="Optional group" />
+                </label>
+                <label className="admin-field">
                   <span>Description</span>
                   <input name="description" maxLength={300} placeholder="Optional" />
                 </label>
@@ -386,6 +427,10 @@ export default async function MenuPage() {
                     <input name="secondary_price" inputMode="decimal" placeholder="optional" />
                   </label>
                 ) : null}
+                <label className="admin-field">
+                  <span>Fri HH</span>
+                  <input name="happy_hour_price" inputMode="decimal" placeholder="optional" />
+                </label>
                 <label className="admin-field">
                   <span>Badge</span>
                   <input name="badge" maxLength={40} placeholder="optional" />

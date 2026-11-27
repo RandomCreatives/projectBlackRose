@@ -73,6 +73,10 @@ nav.main{display:flex;align-items:center;gap:2px}
 nav.main a{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);
   padding:12px 14px;border-radius:100px;transition:.35s var(--ease)}
 nav.main a:hover{color:var(--cream);background:var(--glass);box-shadow:inset 0 0 0 1px var(--stroke)}
+nav.main a[aria-current="page"]{color:var(--ochre);background:rgba(228,144,72,.1);
+  box-shadow:inset 0 0 0 1px rgba(228,144,72,.35)}
+.hdr-acts{display:flex;align-items:center;gap:8px}
+.mob-menu{display:none;min-height:40px;padding:9px 16px}
 
 /* ---------- buttons ---------- */
 .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;
@@ -322,6 +326,7 @@ footer.site a:hover{color:var(--ochre);transform:translateX(3px)}
 /* ================= MOBILE ================= */
 @media(max-width:980px){
   nav.main{display:none}
+  .mob-menu{display:inline-flex}
   .two,.panel,.gal{grid-template-columns:1fr}
   .grid3{grid-template-columns:1fr}
   .hero{min-height:auto;padding-top:calc(104px + env(safe-area-inset-top));padding-bottom:96px;align-items:flex-start}
