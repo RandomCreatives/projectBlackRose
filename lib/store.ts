@@ -1,8 +1,20 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
-import { mkdir, appendFile } from "node:fs/promises";
-import path from "node:path";
-import { insert, supabaseConfigured } from "./supabase";
+import { insert, remove, rpc, select, storageMode, update } from "./supabase";
+import {
+  localDeleteReservation,
+  localListReservations,
+  localPurgeOldReservations,
+  localSaveReservation,
+  localUpdateReservation,
+} from "./local-store";
+
+export type ReservationStatus =
+  | "requested"
+  | "confirmed"
+  | "seated"
+  | "no_show"
+  | "cancelled";
 
 export type ReservationInput = {
   name: string;
@@ -11,6 +23,15 @@ export type ReservationInput = {
   night: string;
   time: string;
   notes: string;
+};
+
+export type Reservation = ReservationInput & {
+  reference: string;
+  created_at: string;
+  source: string;
+  status: ReservationStatus;
+  handled_by?: string | null;
+  handled_at: string | null;
 };
 
 export type ReservationRecord = ReservationInput & {
@@ -28,13 +49,13 @@ export function reference() {
   return `BR-${out}`;
 }
 
-export const backend = supabaseConfigured ? "supabase" : "file";
+export const backend = storageMode === "supabase" ? "supabase" : "file";
 
 /**
  * Persist a reservation request.
  * - Supabase when SUPABASE_URL + a service/secret key are configured.
- * - Otherwise a local JSONL file, so the form is exercisable in dev without a database.
- *   The file backend is deliberately dev-only: Vercel's filesystem is read-only at runtime.
+ * - Otherwise the local JSON store in `.data/reservations.json` in dev so the
+ *   whole site + admin panel can be exercised locally without a database.
  */
 export async function saveReservation(
   input: ReservationInput,
@@ -47,27 +68,89 @@ export async function saveReservation(
     status: "requested",
   };
 
-  if (backend === "supabase") {
+  if (storageMode === "supabase") {
     await insert("reservations", record);
     return record;
   }
 
-  if (
-    process.env.NODE_ENV === "production" &&
-    process.env.ALLOW_FILE_STORE !== "1"
-  ) {
+  if (storageMode === "none") {
     // Fail loudly rather than silently dropping a guest's table request.
     throw new Error(
       "No reservation backend configured (set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY)",
     );
   }
 
-  const dir = path.join(process.cwd(), ".data");
-  await mkdir(dir, { recursive: true });
-  await appendFile(
-    path.join(dir, "reservations.jsonl"),
-    `${JSON.stringify(record)}\n`,
-    "utf8",
-  );
+  await localSaveReservation({ ...record, handled_at: null });
   return record;
+}
+
+export async function listReservations(limit = 300): Promise<Reservation[]> {
+  if (storageMode === "supabase") {
+    return select<Reservation>("reservations", {
+      select: "*",
+      order: "created_at.desc",
+      limit: String(limit),
+    });
+  }
+  if (storageMode === "local") {
+    return localListReservations(limit);
+  }
+  return [];
+}
+
+export async function updateReservationStatus(
+  ref: string,
+  status: ReservationStatus,
+): Promise<void> {
+  const handled_at = new Date().toISOString();
+  if (storageMode === "supabase") {
+    await update(
+      "reservations",
+      { reference: `eq.${ref}` },
+      { status, handled_at },
+    );
+    return;
+  }
+  if (storageMode === "local") {
+    await localUpdateReservation(ref, { status, handled_at });
+    return;
+  }
+  throw new Error("No reservation backend configured");
+}
+
+export async function updateReservationNotes(
+  ref: string,
+  notes: string,
+): Promise<void> {
+  if (storageMode === "supabase") {
+    await update("reservations", { reference: `eq.${ref}` }, { notes });
+    return;
+  }
+  if (storageMode === "local") {
+    await localUpdateReservation(ref, { notes });
+    return;
+  }
+  throw new Error("No reservation backend configured");
+}
+
+export async function deleteReservationRecord(ref: string): Promise<void> {
+  if (storageMode === "supabase") {
+    await remove("reservations", { reference: `eq.${ref}` });
+    return;
+  }
+  if (storageMode === "local") {
+    await localDeleteReservation(ref);
+    return;
+  }
+  throw new Error("No reservation backend configured");
+}
+
+export async function purgeOldReservations(keepDays = 45): Promise<number> {
+  if (storageMode === "supabase") {
+    return rpc<number>("purge_old_reservations", { keep_days: keepDays });
+  }
+  if (storageMode === "local") {
+    return localPurgeOldReservations(keepDays);
+  }
+  throw new Error("No reservation backend configured");
 }

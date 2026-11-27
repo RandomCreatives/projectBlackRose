@@ -2,10 +2,10 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
 import ReserveForm from "@/components/ReserveForm";
-import { venue, week, gallery } from "@/content/site";
+import { venue, week, gallery, nightOptions } from "@/content/site";
 import { getMenu } from "@/lib/menu";
 import MenuSection from "@/components/MenuSection";
-import { venueStatus, tonightRoom, weekRows } from "@/lib/hours";
+import { venueClock, venueStatus, tonightRoom, weekRows } from "@/lib/hours";
 
 export const dynamic = "force-dynamic"; // the open/closed read must never be cached
 
@@ -20,9 +20,13 @@ const TAGLINE_WORDS = [
 
 export default async function Home() {
   const [menu] = await Promise.all([getMenu()]);
-  const status = venueStatus();
-  const room = tonightRoom();
+  const now = new Date();
+  const status = venueStatus(now);
+  const room = tonightRoom(now);
   const rows = weekRows();
+  const todayDow = venueClock(now).dow;
+  const defaultNight =
+    nightOptions.find((n) => n.dow === todayDow)?.label ?? nightOptions[0].label;
 
   return (
     <>
@@ -180,7 +184,7 @@ export default async function Home() {
                   Tell us the night and the number. We hold the table until nine, and we call back within the hour we
                   are open.
                 </p>
-                <ReserveForm />
+                <ReserveForm defaultNight={defaultNight} />
               </div>
 
               <div className="info">
@@ -212,7 +216,10 @@ export default async function Home() {
                       </thead>
                       <tbody>
                         {rows.map((r) => (
-                          <tr key={r.window}>
+                          <tr
+                            key={r.window}
+                            className={r.dows.includes(todayDow) ? "is-today" : undefined}
+                          >
                             <td>
                               <b>{r.days.join(" · ")}</b>
                             </td>

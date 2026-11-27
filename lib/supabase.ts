@@ -13,6 +13,17 @@ const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 export const supabaseConfigured = Boolean(URL_ && KEY);
 
+export const localStoreAllowed =
+  process.env.NODE_ENV !== "production" || process.env.ALLOW_FILE_STORE === "1";
+
+export type StorageMode = "supabase" | "local" | "none";
+
+export const storageMode: StorageMode = supabaseConfigured
+  ? "supabase"
+  : localStoreAllowed
+    ? "local"
+    : "none";
+
 type Query = Record<string, string>;
 
 function endpoint(table: string, query: Query = {}) {

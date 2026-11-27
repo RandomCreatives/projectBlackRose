@@ -4,7 +4,8 @@
  * Run: npx tsx lib/hours.test.ts   (or `npm run test:hours`)
  */
 import assert from "node:assert/strict";
-import { venueStatus } from "./hours";
+import { venueStatus, weekRows } from "./hours";
+import { openingHoursSpec } from "../content/site";
 
 /** Addis is UTC+3, so 21:00 EAT = 18:00Z. */
 const eat = (iso: string) => new Date(iso);
@@ -45,6 +46,23 @@ const late = venueStatus(eat("2026-10-29T22:45:00Z")); // Fri 01:45 EAT
 assert.equal(late.closesSoon, true, "1:45am should read as last orders");
 const midday = venueStatus(eat("2026-10-29T17:00:00Z")); // Thu 20:00 EAT
 assert.equal(midday.closesSoon, false, "8pm should not read as last orders");
+
+// schema.org openingHoursSpecification stays in sync with `hours`
+assert.equal(openingHoursSpec.length, 7);
+const byDay = Object.fromEntries(
+  openingHoursSpec.map((o) => [o.dayOfWeek.split("/").pop()!, o]),
+);
+assert.equal(byDay.Sunday.opens, "17:00");
+assert.equal(byDay.Sunday.closes, "00:30");
+assert.equal(byDay.Monday.closes, "00:30");
+assert.equal(byDay.Tuesday.closes, "02:00");
+assert.equal(byDay.Saturday.closes, "02:00");
+
+// weekRows groups Sun-Mon and Tue-Sat with day-of-week numbers
+const rows = weekRows();
+assert.equal(rows.length, 2);
+assert.deepEqual(rows[0].dows, [0, 1]);
+assert.deepEqual(rows[1].dows, [2, 3, 4, 5, 6]);
 
 console.log(fails === 0 ? "\nall hour cases pass" : `\n${fails} FAILURES`);
 process.exit(fails === 0 ? 0 : 1);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { isSignedIn } from "@/lib/auth";
-import { supabaseConfigured } from "@/lib/supabase";
+import { storageMode } from "@/lib/supabase";
+import AdminTabs from "./AdminTabs";
 import "./admin.css";
 
 export const dynamic = "force-dynamic";
@@ -8,11 +9,6 @@ export const metadata = {
   title: "Admin",
   robots: { index: false, follow: false },
 };
-
-const TABS = [
-  { href: "/admin/bookings", label: "Bookings" },
-  { href: "/admin/menu", label: "Menu" },
-];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const signedIn = await isSignedIn();
@@ -25,15 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <span aria-hidden="true">✦</span> Black Rose <em>Admin</em>
           </Link>
 
-          {signedIn ? (
-            <nav className="admin-tabs" aria-label="Admin sections">
-              {TABS.map((t) => (
-                <Link key={t.href} href={t.href}>
-                  {t.label}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
+          {signedIn ? <AdminTabs /> : null}
 
           <div className="admin-actions">
             <Link href="/" className="admin-link" target="_blank" rel="noopener">
@@ -50,7 +38,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      {!supabaseConfigured ? (
+      {storageMode === "local" ? (
+        <div className="admin-banner local">
+          <b>Local mode.</b> Saving bookings and menu edits to <code>.data/</code> on disk until Supabase is
+          connected.
+        </div>
+      ) : storageMode === "none" ? (
         <div className="admin-banner">
           <b>Database not connected.</b> Set <code>SUPABASE_URL</code> and{" "}
           <code>SUPABASE_SERVICE_ROLE_KEY</code> in the environment. Until then nothing here can save.

@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { checkPassword, issueToken, SESSION_COOKIE } from "@/lib/auth";
+import {
+  checkPassword,
+  issueToken,
+  requestOrigin,
+  SESSION_COOKIE,
+  sessionCookieOptions,
+} from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,13 +36,14 @@ export async function POST(req: Request) {
     ct.includes("multipart/form-data");
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const origin = requestOrigin(req);
 
   const fail = (status: number, message: string, next: string) =>
     isForm
       ? NextResponse.redirect(
           new URL(
             `/admin/login?e=${encodeURIComponent(message)}&next=${encodeURIComponent(next)}`,
-            req.url,
+            origin,
           ),
           303,
         )
@@ -73,14 +80,22 @@ export async function POST(req: Request) {
   }
   if (!ok) return fail(401, "That password does not match. Try again.", next);
 
+  let token: string;
+  try {
+    token = issueToken();
+  } catch {
+    return fail(
+      500,
+      "ADMIN_SESSION_SECRET is missing or too short (min 16 chars).",
+      next,
+    );
+  }
+
   const res = isForm
-    ? NextResponse.redirect(new URL(next, req.url), 303)
+    ? NextResponse.redirect(new URL(next, origin), 303)
     : NextResponse.json({ ok: true });
-  res.cookies.set(SESSION_COOKIE, issueToken(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
+  res.cookies.set(SESSION_COOKIE, token, {
+    ...sessionCookieOptions(req),
     maxAge: MAX_AGE_S,
   });
   return res;

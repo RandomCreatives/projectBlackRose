@@ -18,7 +18,7 @@ export default function Footer() {
             </p>
             <p style={{ fontSize: 11.5, color: "#A2937F", marginTop: 6 }}>
               <span
-                className={status.open ? "dot" : "dot shut"}
+                className={status.open ? (status.closesSoon ? "dot soon" : "dot") : "dot shut"}
                 aria-hidden="true"
                 style={{ verticalAlign: 0 }}
               />
@@ -33,6 +33,7 @@ export default function Footer() {
                   {n.label}
                 </a>
               ))}
+              <a href="/menu">Digital Menu</a>
             </div>
             <div>
               <h4>Elsewhere</h4>

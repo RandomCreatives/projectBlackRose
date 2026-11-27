@@ -1,29 +1,27 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
-import { select, supabaseConfigured } from "@/lib/supabase";
-import { setReservationStatus, deleteReservation, purgeOld } from "../actions";
+import { listReservations, type Reservation } from "@/lib/store";
+import { storageMode } from "@/lib/supabase";
+import {
+  setReservationStatus,
+  setReservationNotes,
+  deleteReservation,
+  purgeOld,
+} from "../actions";
+import ConfirmButton from "../ConfirmButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Bookings", robots: { index: false, follow: false } };
-
-type Reservation = {
-  reference: string;
-  created_at: string;
-  name: string;
-  phone: string;
-  guests: string;
-  night: string;
-  time: string;
-  notes: string;
-  status: string;
-  handled_at: string | null;
-};
 
 const FILTERS = [
   { key: "open", label: "Needs an answer", match: (r: Reservation) => r.status === "requested" },
   { key: "confirmed", label: "Confirmed", match: (r: Reservation) => r.status === "confirmed" },
   { key: "seated", label: "Seated", match: (r: Reservation) => r.status === "seated" },
-  { key: "closed", label: "Cancelled / no-show", match: (r: Reservation) => ["cancelled", "no_show"].includes(r.status) },
+  {
+    key: "closed",
+    label: "Cancelled / no-show",
+    match: (r: Reservation) => ["cancelled", "no_show"].includes(r.status),
+  },
   { key: "all", label: "Everything", match: () => true },
 ];
 
@@ -56,13 +54,9 @@ export default async function BookingsPage({
 
   let rows: Reservation[] = [];
   let failure: string | null = null;
-  if (supabaseConfigured) {
+  if (storageMode !== "none") {
     try {
-      rows = await select<Reservation>("reservations", {
-        select: "*",
-        order: "created_at.desc",
-        limit: "300",
-      });
+      rows = await listReservations(300);
     } catch (err) {
       failure = err instanceof Error ? err.message : "Could not read the bookings.";
     }
@@ -86,9 +80,13 @@ export default async function BookingsPage({
           </p>
         </div>
         <form action={purgeOld}>
-          <button className="admin-btn sm" type="submit" title="Deletes bookings older than 45 days">
+          <ConfirmButton
+            className="admin-btn sm"
+            title="Deletes bookings older than 45 days"
+            message="Delete all bookings older than 45 days?"
+          >
             Purge old
-          </button>
+          </ConfirmButton>
         </form>
       </div>
 
@@ -108,14 +106,18 @@ export default async function BookingsPage({
       </div>
 
       {failure ? (
-        <div className="admin-card">
-          <p className="admin-error">Could not reach the database: {failure}</p>
+        <div className="admin-card" style={{ marginBottom: 18 }}>
+          <p className="admin-error">Could not reach the store: {failure}</p>
         </div>
       ) : null}
 
       <div className="admin-filters">
         {FILTERS.map((x) => (
-          <Link key={x.key} href={`/admin/bookings?f=${x.key}`} aria-current={x.key === active.key ? "page" : undefined}>
+          <Link
+            key={x.key}
+            href={`/admin/bookings?f=${x.key}`}
+            aria-current={x.key === active.key ? "page" : undefined}
+          >
             {x.label}
           </Link>
         ))}
@@ -126,13 +128,20 @@ export default async function BookingsPage({
           <p className="admin-empty">
             {active.key === "open" ? (
               <>
-                Every request has been answered.
                 {rows.length > 0 ? (
                   <>
-                    {" "}
+                    Every request has been answered.{" "}
                     <Link href="/admin/bookings?f=all">See all {rows.length} ↗</Link>
                   </>
-                ) : null}
+                ) : (
+                  <>
+                    No table requests yet. Submit one on the{" "}
+                    <Link href="/#visit" target="_blank" rel="noopener">
+                      public reservation form ↗
+                    </Link>{" "}
+                    and it will appear here.
+                  </>
+                )}
               </>
             ) : (
               "Nothing in this view."
@@ -158,6 +167,19 @@ export default async function BookingsPage({
                   <span style={{ color: "var(--a-mute)" }}> · asked {when(r.created_at)}</span>
                 </p>
                 {r.notes ? <p className="notes">“{r.notes}”</p> : null}
+                <details className="editor" style={{ marginTop: 8 }}>
+                  <summary>{r.notes ? "Edit note" : "Add note"}</summary>
+                  <form action={setReservationNotes} className="admin-form" style={{ marginTop: 8 }}>
+                    <input type="hidden" name="reference" value={r.reference} />
+                    <label className="admin-field">
+                      <span>Notes</span>
+                      <textarea name="notes" defaultValue={r.notes} maxLength={400} placeholder="Table preference, callback note..." />
+                    </label>
+                    <button className="admin-btn sm solid" type="submit" style={{ justifySelf: "start" }}>
+                      Save note
+                    </button>
+                  </form>
+                </details>
               </div>
 
               <div className="controls">
@@ -176,9 +198,13 @@ export default async function BookingsPage({
                 </form>
                 <form action={deleteReservation}>
                   <input type="hidden" name="reference" value={r.reference} />
-                  <button className="admin-btn sm danger" type="submit" style={{ width: "100%" }}>
+                  <ConfirmButton
+                    className="admin-btn sm danger"
+                    style={{ width: "100%" }}
+                    message={`Delete booking ${r.reference} for ${r.name}?`}
+                  >
                     Delete
-                  </button>
+                  </ConfirmButton>
                 </form>
               </div>
             </div>

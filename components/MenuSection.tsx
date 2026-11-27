@@ -1,55 +1,43 @@
-import { formatPrice, type Menu } from "@/lib/menu";
+import type { Menu } from "@/lib/menu";
+import DigitalMenuBook from "./DigitalMenuBook";
 
 export default function MenuSection({ menu }: { menu: Menu }) {
-  const live = menu.categories.filter((c) => c.items.length > 0);
-
   return (
     <section className="sec" id="menu" style={{ paddingTop: 0 }}>
       <div className="wrap">
         <p className="eyebrow rv">The menu</p>
-        <h2 className="rv" style={{ maxWidth: "20ch" }}>
-          One house cocktail, and a short list done <em>properly</em>.
+        <h2 className="rv" style={{ maxWidth: "22ch" }}>
+          One house cocktail, and a cellar book done <em>properly</em>.
         </h2>
+        <p className="lede rv" style={{ marginBottom: 28 }}>
+          Open the book to browse cocktails, local &amp; sparkling wines, kitchen plates, single shots &amp; full
+          bottles, and Friday Happy Hour.
+        </p>
 
-        {live.map((cat) => (
-          <div className="menu-cat" key={cat.id}>
-            <div className="menu-cat-head rv">
-              <h3>{cat.name}</h3>
-              {cat.note ? <p>{cat.note}</p> : null}
-            </div>
-            <div className="grid3">
-              {cat.items.map((item, i) => {
-                const price = formatPrice(item.price_cents, item.currency);
-                return (
-                  <article className="card rv" key={item.id} style={{ transitionDelay: `${i * 0.08}s` }}>
-                    <div className="k">{cat.kicker || cat.name}</div>
-                    <h4>{item.name}</h4>
-                    {item.description ? <p>{item.description}</p> : null}
-                    <div className="price">
-                      <span>
-                        {item.badge || (item.is_signature ? "Signature" : "")}
-                      </span>
-                      <em>{price ?? item.price_note ?? "Ask at the bar"}</em>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        <div className="rv">
+          <DigitalMenuBook categories={menu.categories} variant="embedded" />
+        </div>
 
-        <div className="rv" style={{ marginTop: 32 }}>
-          <a className="btn" href="#visit">
+        <div className="rv" style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <a className="btn solid" href="#visit">
             Reserve for the evening <span className="arw">→</span>
+          </a>
+          <a className="btn" href="/menu">
+            Open full-screen table menu <span className="arw">↗</span>
           </a>
         </div>
 
         {menu.source === "fallback" ? (
           <p className="note rv">
-            <b>Menu —</b> the full list is being moved into the owners’ system. The Black Rose is the house
-            cocktail and is always on.
+            <b>Menu —</b> the full list is temporarily unavailable. The Black Rose is the house cocktail and is
+            always on.
           </p>
-        ) : null}
+        ) : (
+          <p className="note rv">
+            <b>Pricing —</b> all prices are in Ethiopian Birr (ETB) and include 15% VAT &amp; 5% Service Charge.
+            Two-column chapters list single shot &amp; full bottle prices (or Full &amp; Half kitchen portions).
+          </p>
+        )}
       </div>
     </section>
   );
