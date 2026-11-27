@@ -25,7 +25,11 @@ export default function Footer() {
             <div>
               <h4>Visit</h4>
               {nav.map((n) => (
-                <a key={n.href} href={n.href}>
+                <a
+                  key={n.href}
+                  href={n.href}
+                  {...(n.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >
                   {n.label}
                 </a>
               ))}

@@ -21,7 +21,7 @@ export default function Header({ page = "home" }: { page?: "home" | "menu" }) {
           {nav.map((n) => {
             const isActive = page === "menu" && n.href === "/menu";
             const target = resolveHref(n.href);
-            return target.startsWith("/") ? (
+            return target.startsWith("/") && !n.newTab ? (
               <Link
                 key={n.href}
                 href={target}
@@ -30,19 +30,32 @@ export default function Header({ page = "home" }: { page?: "home" | "menu" }) {
                 {n.label}
               </Link>
             ) : (
-              <a key={n.href} href={target}>
+              <a
+                key={n.href}
+                href={target}
+                aria-current={isActive ? "page" : undefined}
+                {...(n.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
                 {n.label}
               </a>
             );
           })}
         </nav>
         <div className="hdr-acts">
-          <Link
-            className="btn mob-menu"
-            href={page === "menu" ? "/" : "/menu"}
-          >
-            {page === "menu" ? "← Lounge" : "Menu"}
-          </Link>
+          {page === "menu" ? (
+            <Link className="btn mob-menu" href="/">
+              ← Lounge
+            </Link>
+          ) : (
+            <a
+              className="btn mob-menu"
+              href="/menu"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Menu
+            </a>
+          )}
           <Link className="btn solid" href={page === "menu" ? "/#visit" : "#visit"}>
             Reserve <span className="arw">→</span>
           </Link>

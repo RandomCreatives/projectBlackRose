@@ -140,12 +140,14 @@ export const gallery = [
   { src: "/img/rose-stamp.jpg", alt: "The black rose from the mural", cap: "One motif", tag: "Since 2003", span: "square" },
 ] as const;
 
-export const nav = [
+export type NavItem = { href: string; label: string; newTab?: boolean };
+
+export const nav: NavItem[] = [
   { href: "#room", label: "The Room" },
-  { href: "/menu", label: "Menu" },
+  { href: "/menu", label: "Menu", newTab: true },
   { href: "#week", label: "The Week" },
   { href: "#visit", label: "Find Us" },
-] as const;
+];
 
 /** Guests / nights / times offered by the reservation form. Keep in sync with lib/hours.ts. */
 export const guestOptions = ["1 guest", "2 guests", "3 guests", "4 guests", "5 guests", "6 guests", "8 — the salon"] as const;

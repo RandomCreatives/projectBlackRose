@@ -578,9 +578,14 @@ export default function DigitalMenuBook({
               {chapters.length} chapters · {totalUniqueItems} items · VAT &amp; SC incl.
             </span>
             {variant === "embedded" ? (
-              <Link href="/menu" className="dmenu-fullscreen-link">
+              <a
+                href="/menu"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="dmenu-fullscreen-link"
+              >
                 Full-screen flipbook ↗
-              </Link>
+              </a>
             ) : null}
           </div>
         </div>

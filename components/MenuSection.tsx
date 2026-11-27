@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Menu } from "@/lib/menu";
 import DigitalMenuBook from "./DigitalMenuBook";
 
@@ -23,9 +22,14 @@ export default function MenuSection({ menu }: { menu: Menu }) {
           <a className="btn solid" href="#visit">
             Reserve for the evening <span className="arw">→</span>
           </a>
-          <Link className="btn" href="/menu">
+          <a
+            className="btn"
+            href="/menu"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Open full-screen flipbook <span className="arw">↗</span>
-          </Link>
+          </a>
         </div>
 
         {menu.source === "fallback" ? (
