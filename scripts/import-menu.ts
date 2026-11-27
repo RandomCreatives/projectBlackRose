@@ -38,12 +38,17 @@ loadEnv();
 
 type JsonItem = {
   name: string;
+  group_name?: string;
   description?: string;
   price?: number | string | null;
   secondary_price?: number | string | null;
+  price2?: number | string | null;
+  happy_hour_price?: number | string | null;
+  price_happy?: number | string | null;
   price_note?: string;
   badge?: string;
   signature?: boolean;
+  is_signature?: boolean;
   available?: boolean;
   sort_order?: number;
 };
@@ -81,9 +86,14 @@ const cents = (p: JsonItem["price"]): number | null => {
   return Number.isFinite(n) ? Math.round(n * 100) : null;
 };
 
-const formatDryPrice = (p1: number | null, p2: number | null) => {
+const formatDryPrice = (
+  p1: number | null,
+  p2: number | null,
+  hh: number | null,
+) => {
   const a = p1 === null ? "ask at bar" : `ETB ${p1 / 100}`;
-  return p2 === null ? a : `${a} / ETB ${p2 / 100}`;
+  const b = p2 === null ? a : `${a} / ETB ${p2 / 100}`;
+  return hh === null ? b : `${b} (HH ETB ${hh / 100})`;
 };
 
 async function importLocal(categories: JsonCategory[]) {
@@ -125,19 +135,21 @@ async function importLocal(categories: JsonCategory[]) {
     for (const it of c.items ?? []) {
       const itemRow = {
         category_id: id ?? null,
+        group_name: it.group_name ?? "",
         name: it.name,
         description: it.description ?? "",
         price_cents: cents(it.price),
-        secondary_price_cents: cents(it.secondary_price),
+        secondary_price_cents: cents(it.secondary_price ?? it.price2),
+        happy_hour_price_cents: cents(it.happy_hour_price ?? it.price_happy),
         price_note: it.price_note ?? "",
         badge: it.badge ?? "",
-        is_signature: it.signature ?? false,
+        is_signature: Boolean(it.signature ?? it.is_signature),
         is_available: it.available ?? true,
         sort_order: it.sort_order ?? 100,
       };
       if (dryRun) {
         console.log(
-          `      item: ${it.name} — ${formatDryPrice(itemRow.price_cents, itemRow.secondary_price_cents)}`,
+          `      item: ${it.group_name ? `[${it.group_name}] ` : ""}${it.name} — ${formatDryPrice(itemRow.price_cents, itemRow.secondary_price_cents, itemRow.happy_hour_price_cents)}`,
         );
         continue;
       }
@@ -145,7 +157,8 @@ async function importLocal(categories: JsonCategory[]) {
       const found = latest.items.find(
         (x) =>
           x.category_id === id &&
-          x.name.trim().toLowerCase() === it.name.trim().toLowerCase(),
+          x.name.trim().toLowerCase() === it.name.trim().toLowerCase() &&
+          x.group_name.trim().toLowerCase() === itemRow.group_name.trim().toLowerCase(),
       );
       if (found) {
         await localUpdateItem(found.id, itemRow);
@@ -214,24 +227,26 @@ async function importSupabase(categories: JsonCategory[]) {
     for (const it of c.items ?? []) {
       const itemRow = {
         category_id: id,
+        group_name: it.group_name ?? "",
         name: it.name,
         description: it.description ?? "",
         price_cents: cents(it.price),
-        secondary_price_cents: cents(it.secondary_price),
+        secondary_price_cents: cents(it.secondary_price ?? it.price2),
+        happy_hour_price_cents: cents(it.happy_hour_price ?? it.price_happy),
         price_note: it.price_note ?? "",
         badge: it.badge ?? "",
-        is_signature: it.signature ?? false,
+        is_signature: Boolean(it.signature ?? it.is_signature),
         is_available: it.available ?? true,
         sort_order: it.sort_order ?? 100,
       };
       if (dryRun) {
         console.log(
-          `      item: ${it.name} — ${formatDryPrice(itemRow.price_cents, itemRow.secondary_price_cents)}`,
+          `      item: ${it.group_name ? `[${it.group_name}] ` : ""}${it.name} — ${formatDryPrice(itemRow.price_cents, itemRow.secondary_price_cents, itemRow.happy_hour_price_cents)}`,
         );
         continue;
       }
       const found = await call<Array<{ id: string }>>(
-        `menu_items?select=id&category_id=eq.${id}&name=ilike.${encodeURIComponent(it.name)}`,
+        `menu_items?select=id&category_id=eq.${id}&name=ilike.${encodeURIComponent(it.name)}&group_name=ilike.${encodeURIComponent(itemRow.group_name)}`,
       );
       if (found.length) {
         await call(`menu_items?id=eq.${found[0].id}`, { method: "PATCH", body: JSON.stringify(itemRow) });

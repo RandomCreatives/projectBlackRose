@@ -24,12 +24,16 @@ export type MenuCategory = {
 export type MenuItem = {
   id: string;
   category_id: string | null;
+  /** optional sub-heading within a chapter (e.g. Shots, Local wine, By the glass, Vodka, Single malt) */
+  group_name: string;
   name: string;
   description: string;
   /** integer minor units; null means "ask at the bar" */
   price_cents: number | null;
   /** optional second column (e.g. Bottle price for spirits, Half portion for kitchen) */
   secondary_price_cents: number | null;
+  /** optional Friday Happy Hour price in minor units */
+  happy_hour_price_cents: number | null;
   price_note: string;
   currency: string;
   badge: string;
@@ -61,18 +65,20 @@ const FALLBACK: Menu = {
       note: "Made the same way every night.",
       price_label: "Serve",
       secondary_price_label: "",
-      image_url: "/img/figure.jpg",
+      image_url: "/img/menu/chapter-cocktails.jpg",
       sort_order: 10,
       is_active: true,
       items: [
         {
           id: "black-rose",
           category_id: "house",
+          group_name: "",
           name: "Black Rose",
           description:
             "Ordered by name, made the same way every night for twenty years. Dark, floral, dry.",
           price_cents: 44500,
           secondary_price_cents: null,
+          happy_hour_price_cents: 35600,
           price_note: "",
           currency: "ETB",
           badge: "Signature",
@@ -103,10 +109,12 @@ function normalizeItem(i: Partial<MenuItem> & { id: string; name: string }): Men
   return {
     id: i.id,
     category_id: i.category_id ?? null,
+    group_name: i.group_name ?? "",
     name: i.name,
     description: i.description ?? "",
     price_cents: i.price_cents ?? null,
     secondary_price_cents: i.secondary_price_cents ?? null,
+    happy_hour_price_cents: i.happy_hour_price_cents ?? null,
     price_note: i.price_note ?? "",
     currency: i.currency ?? "ETB",
     badge: i.badge ?? "",

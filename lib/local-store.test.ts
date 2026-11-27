@@ -26,38 +26,44 @@ async function run() {
   process.env.LOCAL_DATA_DIR = dir;
 
   try {
-    // 1. Auto-seeds the full Black Rose menu from content/blackrose-menu.json
+    // 1. Auto-seeds the unified 6-chapter, 125-item Black Rose menu from content/blackrose-menu.json
     const seeded = await localReadMenuData();
-    assert.equal(seeded.categories.length, 16, "should seed 16 Black Rose chapters");
-    assert.equal(seeded.items.length, 169, "should seed 169 Black Rose items");
-
-    const singleMalt = seeded.categories.find((c) => c.name === "Single Malt Whisky");
-    assert.ok(singleMalt, "Single Malt Whisky chapter should exist");
-    assert.equal(singleMalt.price_label, "Shot");
-    assert.equal(singleMalt.secondary_price_label, "Bottle");
-
-    const glenfiddich18 = seeded.items.find((i) => i.name === "Glenfiddich 18yr (70cl)");
-    assert.ok(glenfiddich18, "Glenfiddich 18yr should be seeded");
-    assert.equal(glenfiddich18.price_cents, 302000, "shot price should be 3,020 ETB");
-    assert.equal(glenfiddich18.secondary_price_cents, 5654000, "bottle price should be 56,540 ETB");
+    assert.equal(seeded.categories.length, 6, "should seed 6 Black Rose chapters");
+    assert.equal(seeded.items.length, 125, "should seed 125 unique Black Rose items");
 
     const cocktails = seeded.categories.find((c) => c.name === "Cocktails");
     assert.ok(cocktails, "Cocktails chapter should exist");
+    assert.equal(cocktails.image_url, "/img/menu/chapter-cocktails.jpg");
+
     const blackRose = seeded.items.find(
       (i) => i.category_id === cocktails.id && i.name === "Black Rose" && i.is_signature === true,
     );
-    assert.ok(blackRose, "Black Rose signature cocktail should be seeded in Cocktails");
-    assert.equal(blackRose.price_cents, 44500, "Black Rose price should be 445 ETB");
+    assert.ok(blackRose, "Black Rose signature cocktail should be seeded");
+    assert.equal(blackRose.price_cents, 44500, "Black Rose regular price should be 445 ETB");
+    assert.equal(blackRose.happy_hour_price_cents, 35600, "Black Rose Fri HH price should be 356 ETB");
 
-    const happyHour = seeded.categories.find(
-      (c) => c.name === "Friday Happy Hour — Cocktails & Kitchen",
+    const wine = seeded.categories.find((c) => c.name === "Wine");
+    assert.ok(wine, "Wine chapter should exist");
+    const acaciaRows = seeded.items.filter(
+      (i) => i.category_id === wine.id && i.name === "Acacia Medium Sweet Red / Rosé",
     );
-    assert.ok(happyHour, "Friday Happy Hour chapter should exist");
-    const happyBlackRose = seeded.items.find(
-      (i) => i.category_id === happyHour.id && i.name === "Black Rose",
+    assert.equal(
+      acaciaRows.length,
+      2,
+      "same wine in Local wine and By the glass should be two distinct rows",
     );
-    assert.ok(happyBlackRose, "Black Rose should appear on Friday Happy Hour");
-    assert.equal(happyBlackRose.price_cents, 35600, "Happy Hour Black Rose should be 356 ETB");
+
+    const whisky = seeded.categories.find((c) => c.name === "Whisky & Cognac");
+    assert.ok(whisky, "Whisky & Cognac chapter should exist");
+    assert.equal(whisky.price_label, "Shot");
+    assert.equal(whisky.secondary_price_label, "Bottle");
+    assert.equal(whisky.image_url, "/img/menu/chapter-whisky.jpg");
+
+    const glenfiddich18 = seeded.items.find((i) => i.name === "Glenfiddich 18");
+    assert.ok(glenfiddich18, "Glenfiddich 18 should be seeded");
+    assert.equal(glenfiddich18.group_name, "Single malt");
+    assert.equal(glenfiddich18.price_cents, 302000, "shot price should be 3,020 ETB");
+    assert.equal(glenfiddich18.secondary_price_cents, 5654000, "bottle price should be 56,540 ETB");
 
     const cheeseSteak = seeded.items.find((i) => i.name === "Cheese Steak");
     assert.ok(cheeseSteak, "Cheese Steak should be seeded");
@@ -71,13 +77,13 @@ async function run() {
       note: "Poured cold",
       price_label: "Glass",
       secondary_price_label: "Bottle",
-      image_url: "/img/room.jpg",
+      image_url: "/img/menu/chapter-wine.jpg",
       sort_order: 200,
       is_active: true,
     });
     assert.equal(cat.price_label, "Glass");
     assert.equal(cat.secondary_price_label, "Bottle");
-    assert.equal(cat.image_url, "/img/room.jpg");
+    assert.equal(cat.image_url, "/img/menu/chapter-wine.jpg");
 
     const updatedCat = await localUpdateCategory(cat.id, {
       name: "Reserve Cellar",
@@ -86,57 +92,81 @@ async function run() {
     assert.equal(updatedCat?.name, "Reserve Cellar");
     assert.equal(updatedCat?.is_active, false);
 
-    // 3. Create dual-price item + enforce case-insensitive unique (category_id, name)
-    const wine = await localCreateItem({
+    // 3. Create dual-price + happy-hour item + enforce unique (category_id, name, group_name)
+    const syrahBottle = await localCreateItem({
       category_id: cat.id,
+      group_name: "Bottles",
       name: "Reserve Syrah",
       description: "Dry red",
       price_cents: 85000,
       secondary_price_cents: 420000,
+      happy_hour_price_cents: 70000,
       price_note: "",
       badge: "Cellar",
       is_signature: false,
       is_available: true,
       sort_order: 10,
     });
-    assert.equal(wine.secondary_price_cents, 420000);
+    assert.equal(syrahBottle.secondary_price_cents, 420000);
+    assert.equal(syrahBottle.happy_hour_price_cents, 70000);
 
+    // Same name in a DIFFERENT group_name is allowed
+    const syrahGlass = await localCreateItem({
+      category_id: cat.id,
+      group_name: "By the glass",
+      name: "Reserve Syrah",
+      description: "Single glass",
+      price_cents: 85000,
+      secondary_price_cents: null,
+      happy_hour_price_cents: null,
+      price_note: "",
+      badge: "",
+      is_signature: false,
+      is_available: true,
+      sort_order: 20,
+    });
+    assert.equal(syrahGlass.group_name, "By the glass");
+
+    // Same name in the SAME group_name fails with 23505
     await assert.rejects(
       () =>
         localCreateItem({
           category_id: cat.id,
+          group_name: "bottles",
           name: "reserve syrah",
           description: "Duplicate",
           price_cents: 85000,
           secondary_price_cents: 420000,
+          happy_hour_price_cents: null,
           price_note: "",
           badge: "",
           is_signature: false,
           is_available: true,
-          sort_order: 20,
+          sort_order: 30,
         }),
       /23505/,
-      "duplicate name in same category should fail with 23505",
+      "duplicate name in same category + group should fail with 23505",
     );
 
-    const hidden = await localUpdateItem(wine.id, {
+    const hidden = await localUpdateItem(syrahBottle.id, {
       is_available: false,
       secondary_price_cents: 450000,
     });
     assert.equal(hidden?.is_available, false);
     assert.equal(hidden?.secondary_price_cents, 450000);
 
-    // Deleting category keeps item as uncategorised (category_id = null)
+    // Deleting category keeps items as uncategorised (category_id = null)
     await localDeleteCategory(cat.id);
     const afterCatDelete = await localReadMenuData();
-    const orphaned = afterCatDelete.items.find((i) => i.id === wine.id);
+    const orphaned = afterCatDelete.items.find((i) => i.id === syrahBottle.id);
     assert.ok(orphaned, "item should survive category deletion");
     assert.equal(orphaned.category_id, null, "item should become uncategorised");
 
-    await localDeleteItem(wine.id);
+    await localDeleteItem(syrahBottle.id);
+    await localDeleteItem(syrahGlass.id);
     const afterItemDelete = await localReadMenuData();
     assert.equal(
-      afterItemDelete.items.find((i) => i.id === wine.id),
+      afterItemDelete.items.find((i) => i.id === syrahBottle.id),
       undefined,
     );
 

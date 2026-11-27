@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Menu } from "@/lib/menu";
 import DigitalMenuBook from "./DigitalMenuBook";
 
@@ -10,8 +11,8 @@ export default function MenuSection({ menu }: { menu: Menu }) {
           One house cocktail, and a cellar book done <em>properly</em>.
         </h2>
         <p className="lede rv" style={{ marginBottom: 28 }}>
-          Open the book to browse cocktails, local &amp; sparkling wines, kitchen plates, single shots &amp; full
-          bottles, and Friday Happy Hour.
+          Open the flipbook to browse cocktails, Ethiopian &amp; sparkling wines, spirits, single malts, kitchen
+          plates, cold beers, and Friday Happy Hour.
         </p>
 
         <div className="rv">
@@ -22,9 +23,9 @@ export default function MenuSection({ menu }: { menu: Menu }) {
           <a className="btn solid" href="#visit">
             Reserve for the evening <span className="arw">→</span>
           </a>
-          <a className="btn" href="/menu">
-            Open full-screen table menu <span className="arw">↗</span>
-          </a>
+          <Link className="btn" href="/menu">
+            Open full-screen flipbook <span className="arw">↗</span>
+          </Link>
         </div>
 
         {menu.source === "fallback" ? (
@@ -35,7 +36,8 @@ export default function MenuSection({ menu }: { menu: Menu }) {
         ) : (
           <p className="note rv">
             <b>Pricing —</b> all prices are in Ethiopian Birr (ETB) and include 15% VAT &amp; 5% Service Charge.
-            Two-column chapters list single shot &amp; full bottle prices (or Full &amp; Half kitchen portions).
+            Two-column chapters list Shot &amp; Bottle prices (or Full &amp; Half portions); ochre lines note
+            Friday Happy Hour.
           </p>
         )}
       </div>
