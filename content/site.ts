@@ -45,7 +45,7 @@ export const venue = {
   ratings: { google: { score: 4.4, count: 133 }, hotspot: { score: 4.5, count: 126 } },
 } as const;
 
-/** Opening times in minutes from midnight, local (Africa/Addis_Ababa, UTC+3, no DST). */
+/** Opening times in minutes from midnight, local (Africa/Addis_Ababa, UTC+3, no DST). Doors at 5pm, every day. */
 export const hours = [
   { dow: 0, open: 17 * 60, close: 24 * 60 + 30, label: "Sunday", short: "Sun" },
   { dow: 1, open: 17 * 60, close: 24 * 60 + 30, label: "Monday", short: "Mon" },

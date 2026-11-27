@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     url: "/",
     title: "Black Rose Lounge — Addis Ababa",
     description:
-      "Candlelight, a properly made cocktail, and a conversation you can actually hear. Djibouti Street, 2nd floor, open from 5pm.",
+      "Candlelight, a properly made cocktail, and a conversation you can actually hear. Djibouti Street, 2nd floor, open nightly from 5pm.",
     images: [{ url: "/img/room.jpg", width: 900, height: 675, alt: "The room at Black Rose Lounge" }],
   },
   twitter: { card: "summary_large_image" },

@@ -17,11 +17,7 @@ export default function Footer() {
               A candlelit cocktail room on Djibouti Street. Open since {venue.since}.
             </p>
             <p style={{ fontSize: 11.5, color: "#A2937F", marginTop: 6 }}>
-              <span
-                className={status.open ? (status.closesSoon ? "dot soon" : "dot") : "dot shut"}
-                aria-hidden="true"
-                style={{ verticalAlign: 0 }}
-              />
+              <span className="dot" aria-hidden="true" style={{ verticalAlign: 0 }} />
               {status.headline} · {status.detail}
             </p>
           </div>

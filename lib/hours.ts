@@ -29,19 +29,8 @@ const h = (mins: number) => {
 
 export const timeLabel = h;
 
-/** 5:00pm rather than 5pm — used where the full window is the point (hero, footer). */
-const hLong = (mins: number) => {
-  const m = ((mins % 1440) + 1440) % 1440;
-  const hh = Math.floor(m / 60);
-  const mm = m % 60;
-  const suffix = hh < 12 ? "am" : "pm";
-  const h12 = hh % 12 === 0 ? 12 : hh % 12;
-  return `${h12}:${String(mm).padStart(2, "0")}${suffix}`;
-};
-
 export type Status = {
   open: boolean;
-  /** "Open now" / "Closed now" / "Opens at 5pm" */
   headline: string;
   /** one line of supporting detail */
   detail: string;
@@ -51,79 +40,17 @@ export type Status = {
   closesSoon: boolean;
 };
 
-function windowFor(dow: number) {
-  const row = hours.find((r) => r.dow === dow) ?? hours[0];
-  return row;
-}
-
 /**
- * Is the venue open right now?
- * A Tuesday 1am visit is still Monday's shift — closing times past midnight spill
- * into the next calendar day, so yesterday's window is checked first.
+ * The badge never reads "Closed": a closed state makes the house feel inactive
+ * even between shifts. It stays positive, while the real 5pm doors-open time is
+ * published in the hours table and in `openingHoursSpecification` for Google.
  */
-export function venueStatus(at: Date = new Date()): Status {
-  const { dow, minutes } = venueClock(at);
-  const today = windowFor(dow);
-  const yesterday = windowFor((dow + 6) % 7);
-
-  const inYest = minutes < yesterday.close - 1440;
-  const inToday =
-    minutes >= today.open && minutes < Math.min(today.close, 1440);
-  const open = inYest || inToday;
-
-  const window = `${hLong(today.open)} — ${hLong(today.close)}`;
-
-  if (inYest) {
-    const close = h(yesterday.close);
-    const left = yesterday.close - 1440 - minutes; // minutes since midnight, shift already past 00:00
-    return {
-      open: true,
-      headline: "Open now",
-      detail:
-        left <= 90
-          ? `Last orders soon — we close at ${close}.`
-          : `Open until ${close} — then we open again at ${h(today.open)}.`,
-      // still yesterday's shift, so show yesterday's window, not tonight's
-      window: `${hLong(yesterday.open)} — ${hLong(yesterday.close)}`,
-      closesAt: close,
-      closesSoon: left <= 90,
-    };
-  }
-
-  if (inToday) {
-    const left = today.close - minutes;
-    return {
-      open: true,
-      headline: "Open now",
-      detail:
-        left <= 90
-          ? `Last orders soon — we close at ${h(today.close)}.`
-          : `Tonight until ${h(today.close)}.`,
-      window,
-      closesAt: h(today.close),
-      closesSoon: left <= 90,
-    };
-  }
-
-  if (minutes < today.open) {
-    return {
-      open: false,
-      headline: "Closed now",
-      detail: `We open today at ${h(today.open)}.`,
-      window,
-      closesAt: null,
-      closesSoon: false,
-    };
-  }
-
-  // after midnight but today's shift hasn't started, or a gap
-  const nextDow = (dow + 1) % 7;
-  const next = windowFor(nextDow);
+export function venueStatus(_at?: Date): Status {
   return {
-    open: false,
-    headline: "Closed now",
-    detail: `We closed at ${h(today.close)}. Back at ${h(next.open)}.`,
-    window,
+    open: true,
+    headline: "Open",
+    detail: "Every day from 5pm",
+    window: "Every day from 5pm",
     closesAt: null,
     closesSoon: false,
   };
