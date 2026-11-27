@@ -1,0 +1,35 @@
+{
+  "_comment": "The shape the site expects. Prices are in ETB as humans write them; the importer converts to minor units. Omit price for 'ask at the bar'.",
+  "categories": [
+    {
+      "name": "House serves",
+      "kicker": "The house serve",
+      "note": "Made the same way every night.",
+      "sort_order": 10,
+      "items": [
+        {
+          "name": "Black Rose",
+          "description": "Ordered by name, made the same way every night for twenty years. Dark, floral, dry.",
+          "price": 445,
+          "badge": "Signature",
+          "signature": true,
+          "sort_order": 10
+        }
+      ]
+    },
+    {
+      "name": "Stirred",
+      "kicker": "Stirred",
+      "sort_order": 20,
+      "items": [
+        {
+          "name": "Noir Sour",
+          "description": "Bourbon, citrus, and a float of red wine. The one guests order twice.",
+          "price": 480,
+          "badge": "House favourite",
+          "sort_order": 10
+        }
+      ]
+    }
+  ]
+}
