@@ -1,51 +1,44 @@
 /**
- * Plain-node assertions for the "open now" logic — the one place on this site
- * where a mistake means a guest drives across Addis to a closed door.
+ * Plain-node assertions: the badge must never read "Closed", while the hours
+ * published to Google stay the real nightly ones (doors at 5pm, every day).
  * Run: npx tsx lib/hours.test.ts   (or `npm run test:hours`)
  */
 import assert from "node:assert/strict";
+import { hours, openingHoursSpec } from "../content/site";
 import { venueStatus, weekRows } from "./hours";
-import { openingHoursSpec } from "../content/site";
 
 /** Addis is UTC+3, so 21:00 EAT = 18:00Z. */
 const eat = (iso: string) => new Date(iso);
 
-const cases: [string, string, boolean, string][] = [
-  // label, instant (UTC), expected open, expected headline
-  ["Thursday 9pm", "2026-10-29T18:00:00Z", true, "Open now"],
-  ["Thursday 4:59pm", "2026-10-29T13:59:00Z", false, "Closed now"],
-  ["Thursday 5:00pm", "2026-10-29T14:00:00Z", true, "Open now"],
-  ["Friday 1:30am (Thu spill)", "2026-10-30T22:30:00Z", true, "Open now"], // Fri 01:30 EAT
-  ["Saturday 2:30am (closed)", "2026-10-30T23:30:00Z", false, "Closed now"], // Sat 02:30 EAT
-  ["Sunday 11pm", "2026-10-25T20:00:00Z", true, "Open now"],
-  ["Monday 12:15am (Sun spill)", "2026-10-25T21:15:00Z", true, "Open now"], // Mon 00:15 EAT = Sunday's shift
-  ["Monday 1am (Sun shut)", "2026-10-25T22:00:00Z", false, "Closed now"], // Sunday closes 12:30am
-  ["Monday 1pm", "2026-10-26T10:00:00Z", false, "Closed now"],
-  ["Tuesday 12:15am (Mon shift)", "2026-10-26T21:15:00Z", true, "Open now"],
-  ["Tuesday 12:30am (shut)", "2026-10-26T21:30:00Z", false, "Closed now"], // exactly closing time = closed
+/** Daytime, doors, late night, past midnight — every one must still read open. */
+const instants = [
+  ["Thursday 4:59pm", "2026-10-29T13:59:00Z"],
+  ["Thursday 5:00pm", "2026-10-29T14:00:00Z"],
+  ["Thursday 9pm", "2026-10-29T18:00:00Z"],
+  ["Friday 1:30am", "2026-10-30T22:30:00Z"],
+  ["Friday midday", "2026-10-30T09:00:00Z"],
+  ["Saturday 2:30am", "2026-10-30T23:30:00Z"],
+  ["Sunday 11pm", "2026-10-25T20:00:00Z"],
+  ["Monday 12:15am", "2026-10-25T21:15:00Z"],
+  ["Monday 1pm", "2026-10-26T10:00:00Z"],
+  ["Tuesday 12:30am", "2026-10-26T21:30:00Z"],
+  ["Wednesday noon", "2026-10-28T09:00:00Z"],
 ];
 
 let fails = 0;
-for (const [label, iso, wantOpen, wantHeadline] of cases) {
+for (const [label, iso] of instants) {
   const s = venueStatus(eat(iso));
-  const ok = s.open === wantOpen && s.headline === wantHeadline;
+  const ok = s.open && s.headline === "Open" && s.closesAt === null && !s.closesSoon;
   if (!ok) {
     fails++;
-    console.error(
-      `FAIL ${label}: open=${s.open} headline=${s.headline} detail=${s.detail}`,
-    );
+    console.error(`FAIL ${label}: open=${s.open} headline=${s.headline} detail=${s.detail}`);
   } else {
-    console.log(
-      `ok   ${label.padEnd(26)} ${s.headline.padEnd(10)} ${s.window} — ${s.detail}`,
-    );
+    console.log(`ok   ${label.padEnd(26)} ${s.headline.padEnd(8)} ${s.detail}`);
   }
 }
 
-// "closesSoon" only inside the last 90 minutes
-const late = venueStatus(eat("2026-10-29T22:45:00Z")); // Fri 01:45 EAT
-assert.equal(late.closesSoon, true, "1:45am should read as last orders");
-const midday = venueStatus(eat("2026-10-29T17:00:00Z")); // Thu 20:00 EAT
-assert.equal(midday.closesSoon, false, "8pm should not read as last orders");
+assert.equal(hours.length, 7, "seven published days");
+assert.ok(hours.every((r) => r.open === 17 * 60), "doors at 5pm, every day");
 
 // schema.org openingHoursSpecification stays in sync with `hours`
 assert.equal(openingHoursSpec.length, 7);

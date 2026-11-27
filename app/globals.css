@@ -144,8 +144,6 @@ nav.main a[aria-current="page"]{color:var(--ochre);background:rgba(228,144,72,.1
 .stars{color:var(--gold);letter-spacing:.14em;font-size:11px}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#7BAF6A;margin-right:7px;
   vertical-align:1px;box-shadow:0 0 0 3px rgba(123,175,106,.16)}
-.dot.shut{background:#B4715C;box-shadow:0 0 0 3px rgba(180,113,92,.16)}
-.dot.soon{background:var(--gold);box-shadow:0 0 0 3px rgba(217,185,120,.18)}
 
 /* scroll cue */
 .cue{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:4;

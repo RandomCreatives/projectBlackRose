@@ -7,7 +7,7 @@ import { getMenu } from "@/lib/menu";
 import MenuSection from "@/components/MenuSection";
 import { venueClock, venueStatus, tonightRoom, weekRows } from "@/lib/hours";
 
-export const dynamic = "force-dynamic"; // the open/closed read must never be cached
+export const dynamic = "force-dynamic"; // the room programme follows the venue clock
 
 const TAGLINE_WORDS = [
   "Moody",

@@ -10,7 +10,7 @@ cp .env.example .env.local
 npm install
 npm run dev        # http://localhost:3000 (persists menu + bookings in .data/ without Supabase)
 npm run build && npm start
-npm test           # hours clock + local-store CRUD assertions
+npm test           # always-open badge + hours spec + local-store CRUD assertions
 ```
 
 ## Two front doors
@@ -96,9 +96,13 @@ to accept a booking** rather than silently dropping it.
 
 Skip link, visible focus rings, `aria-live` on the reservation result, real `<figure>` captions,
 `prefers-reduced-motion` honoured in CSS *and* JS, a print stylesheet, and contrast on ink
-checked to AA (the concept's two failing footer greys were lifted). `BarOrPub` JSON-LD with
-`openingHoursSpecification` derived from the same `hours` array the page uses. No
-`aggregateRating` — the 4.4 is Google's, not first-party. `/admin` is `noindex` and disallowed.
+checked to AA (the concept's two failing footer greys were lifted). Doors are at 5pm every
+day; the hero and footer **never show a "Closed" badge**, because a closed state reads as the
+house being inactive between shifts. The real nightly hours still live in `content/site.ts`
+and are published as `BarOrPub` JSON-LD `openingHoursSpecification` (17:00 → 02:00 Tue–Sat,
+17:00 → 00:30 Sun–Mon); keep the Google Business Profile hours (5pm, every day) in step with
+them. No `aggregateRating` — the 4.4 is Google's, not first-party. `/admin` is `noindex` and
+disallowed.
 
 ## Still unverified — do not treat as fact
 

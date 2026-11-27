@@ -2,24 +2,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { venue } from "@/content/site";
-import { venueStatus, tonightRoom, type Status } from "@/lib/hours";
+import { tonightRoom, type Status } from "@/lib/hours";
 
 export default function Hero({ initial, initialRoom }: { initial: Status; initialRoom: string }) {
-  // server renders the first paint; the client re-reads the clock after hydration
-  const [status, setStatus] = useState<Status>(initial);
+  // the room programme follows the venue clock; the open status never changes
   const [room, setRoom] = useState(initialRoom);
 
   useEffect(() => {
-    const tick = () => {
-      setStatus(venueStatus());
-      setRoom(tonightRoom());
-    };
+    const tick = () => setRoom(tonightRoom());
     tick();
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
-
-  const dotClass = status.open ? (status.closesSoon ? "dot soon" : "dot") : "dot shut";
 
   return (
     <div className="hero" id="top">
@@ -73,10 +67,10 @@ export default function Hero({ initial, initialRoom }: { initial: Status; initia
               </div>
             </div>
             <div>
-              <div className="k">{status.headline}</div>
+              <div className="k">{initial.headline}</div>
               <div className="v">
-                <span className={dotClass} aria-hidden="true" />
-                <span>{status.window}</span>
+                <span className="dot" aria-hidden="true" />
+                <span>{initial.window}</span>
               </div>
             </div>
             <div>
