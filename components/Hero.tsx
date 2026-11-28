@@ -21,7 +21,7 @@ export default function Hero({ initial, initialRoom }: { initial: Status; initia
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="wm-wide" src="/img/watermark.jpg" alt="" width={1600} height={1600} fetchPriority="high" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="wm-tall" src="/img/figure.jpg" alt="" width={900} height={1679} />
+        <img className="wm-tall" src="/img/profile.jpg" alt="" width={900} height={1349} fetchPriority="high" />
       </div>
       <div className="hero-veil" aria-hidden="true" />
 

@@ -1,6 +1,6 @@
 /* Black Rose Lounge — Progressive Web App Service Worker */
-const STATIC_CACHE = "br-static-v1";
-const PAGES_CACHE = "br-pages-v1";
+const STATIC_CACHE = "br-static-v2";
+const PAGES_CACHE = "br-pages-v2";
 
 const PRECACHE_URLS = [
   "/offline",
@@ -9,6 +9,7 @@ const PRECACHE_URLS = [
   "/favicon/icon-maskable-192.png",
   "/img/room.jpg",
   "/img/watermark.jpg",
+  "/img/profile.jpg",
 ];
 
 self.addEventListener("install", (event) => {
