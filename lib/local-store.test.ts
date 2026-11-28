@@ -8,17 +8,29 @@ import os from "node:os";
 import path from "node:path";
 import {
   localCreateCategory,
+  localCreateGalleryPhoto,
   localCreateItem,
+  localCreateSocialLink,
+  localCreateSocialPost,
   localDeleteCategory,
+  localDeleteGalleryPhoto,
   localDeleteItem,
   localDeleteReservation,
+  localDeleteSocialLink,
+  localDeleteSocialPost,
   localListReservations,
   localPurgeOldReservations,
+  localReadGallery,
   localReadMenuData,
+  localReadUploadedImage,
   localSaveReservation,
+  localSaveUploadedImage,
   localUpdateCategory,
+  localUpdateGalleryPhoto,
   localUpdateItem,
   localUpdateReservation,
+  localUpdateSocialLink,
+  localUpdateSocialPost,
 } from "./local-store";
 
 async function run() {
@@ -246,6 +258,84 @@ async function run() {
     } finally {
       await rm(legacyDir, { recursive: true, force: true });
     }
+
+    // 6. Gallery & Socials store + uploaded image lifecycle
+    process.env.LOCAL_DATA_DIR = dir;
+    const seededGallery = await localReadGallery();
+    assert.equal(seededGallery.photos.length, 6, "should seed 6 real Black Rose venue photos");
+    assert.equal(seededGallery.socials.length, 2, "should seed 2 verified social profiles");
+    assert.equal(seededGallery.posts.length, 3, "should seed 3 social showcase highlights");
+
+    // Upload a valid JPEG buffer + reject invalid data
+    const fakeJpeg = Buffer.from([
+      0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0xff, 0xd9,
+    ]);
+    const uploadedPath = await localSaveUploadedImage(fakeJpeg);
+    assert.match(uploadedPath, /^\/api\/media\/[a-z0-9-]+\.jpg$/);
+    const filename = uploadedPath.slice("/api/media/".length);
+    const loadedUpload = await localReadUploadedImage(filename);
+    assert.ok(loadedUpload, "uploaded image should be readable");
+    assert.equal(loadedUpload.contentType, "image/jpeg");
+    assert.equal(await localReadUploadedImage("../etc/passwd"), null, "path traversal must return null");
+    await assert.rejects(
+      () => localSaveUploadedImage(Buffer.from("not-an-image-at-all")),
+      /Unsupported image format/,
+    );
+
+    // Photo CRUD + automatic upload cleanup on delete
+    const createdPhoto = await localCreateGalleryPhoto({
+      title: "Bar counter",
+      tag: "Night",
+      alt: "Bar counter",
+      image_url: uploadedPath,
+      span: "wide",
+      sort_order: 99,
+      is_visible: true,
+    });
+    const updatedPhoto = await localUpdateGalleryPhoto(createdPhoto.id, {
+      is_visible: false,
+      tag: "Hidden",
+    });
+    assert.equal(updatedPhoto?.is_visible, false);
+    assert.equal(updatedPhoto?.tag, "Hidden");
+
+    await localDeleteGalleryPhoto(createdPhoto.id);
+    assert.equal(
+      await localReadUploadedImage(filename),
+      null,
+      "deleting sole photo referencing upload should clean up file",
+    );
+
+    // Social link + post CRUD
+    const ig = await localCreateSocialLink({
+      platform: "instagram",
+      label: "Instagram",
+      handle: "@blackroselounge.et",
+      url: "https://instagram.com/blackroselounge.et",
+      sort_order: 30,
+      is_visible: true,
+    });
+    const igUpdated = await localUpdateSocialLink(ig.id, { handle: "@blackroseaddis" });
+    assert.equal(igUpdated?.handle, "@blackroseaddis");
+    await localDeleteSocialLink(ig.id);
+
+    const post = await localCreateSocialPost({
+      platform: "instagram",
+      caption: "Jazz night in Suite 201",
+      image_url: "/img/gallery/banquette-corner.jpg",
+      post_url: "/week",
+      posted_label: "This Friday",
+      sort_order: 40,
+      is_visible: true,
+    });
+    const postUpdated = await localUpdateSocialPost(post.id, { is_visible: false });
+    assert.equal(postUpdated?.is_visible, false);
+    await localDeleteSocialPost(post.id);
+
+    const finalGallery = await localReadGallery();
+    assert.equal(finalGallery.photos.length, 6);
+    assert.equal(finalGallery.socials.length, 2);
+    assert.equal(finalGallery.posts.length, 3);
 
     console.log("all local-store cases pass");
   } finally {

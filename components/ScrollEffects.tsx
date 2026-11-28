@@ -1,11 +1,15 @@
 "use client";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 /** Pointer light, reveal-on-scroll, card spotlight, header state, mobile pill, parallax. */
 export default function ScrollEffects() {
+  const pathname = usePathname();
+
   useEffect(() => {
     const cleanups: Array<() => void> = [];
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isHome = pathname === "/";
 
     /* header + reserve pill */
     const hdr = document.getElementById("hdr");
@@ -14,10 +18,10 @@ export default function ScrollEffects() {
 
     const onScroll = () => {
       const y = window.scrollY;
-      hdr?.classList.toggle("scrolled", y > 40);
+      hdr?.classList.toggle("scrolled", !isHome || y > 40);
       if (pill) {
         const near = visit ? visit.getBoundingClientRect().top < window.innerHeight * 0.9 : false;
-        pill.classList.toggle("hide", y < 220 || near);
+        pill.classList.toggle("hide", pathname === "/visit" || y < 220 || near);
       }
     };
     onScroll();
@@ -38,9 +42,16 @@ export default function ScrollEffects() {
             }
           });
         },
-        { threshold: 0.14, rootMargin: "0px 0px -7% 0px" },
+        { threshold: 0.08, rootMargin: "0px 0px -4% 0px" },
       );
-      els.forEach((el) => io.observe(el));
+      els.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.96) {
+          el.classList.add("in");
+        } else {
+          io.observe(el);
+        }
+      });
       document.querySelectorAll<HTMLElement>(".hero .rv").forEach((el) => el.classList.add("in"));
       cleanups.push(() => io.disconnect());
     } else {
@@ -122,7 +133,7 @@ export default function ScrollEffects() {
     return () => {
       for (const fn of cleanups) fn();
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

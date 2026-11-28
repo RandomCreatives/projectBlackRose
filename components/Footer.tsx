@@ -1,20 +1,28 @@
+import Link from "next/link";
 import Mark from "./Mark";
 import { venue, nav } from "@/content/site";
 import { venueStatus } from "@/lib/hours";
+import { getGallery } from "@/lib/gallery";
 
-export default function Footer() {
+export default async function Footer() {
   const status = venueStatus();
+  const { socials } = await getGallery();
+  const socialLinks =
+    socials.length > 0
+      ? socials.map((s) => ({ label: s.label, href: s.url }))
+      : venue.socials;
+
   return (
     <footer className="site">
       <div className="wrap">
         <div className="foot">
           <div>
-            <a className="brand" href="#top" aria-label="Black Rose Lounge — back to top">
+            <Link className="brand" href="/" aria-label="Black Rose Lounge — home">
               <Mark />
               <span>Black&nbsp;Rose</span>
-            </a>
-            <p style={{ fontSize: 13, color: "#97897A", marginTop: 14, maxWidth: "26ch" }}>
-              A candlelit cocktail room on Djibouti Street. Open since {venue.since}.
+            </Link>
+            <p style={{ fontSize: 13, color: "#97897A", marginTop: 14, maxWidth: "28ch" }}>
+              A candlelit cocktail room in Suite 201 on Djibouti Street. Open since {venue.since}.
             </p>
             <p style={{ fontSize: 11.5, color: "#A2937F", marginTop: 6 }}>
               <span className="dot" aria-hidden="true" style={{ verticalAlign: 0 }} />
@@ -23,21 +31,17 @@ export default function Footer() {
           </div>
           <div className="cols">
             <div>
-              <h4>Visit</h4>
+              <h4>Explore</h4>
               {nav.map((n) => (
-                <a
-                  key={n.href}
-                  href={n.href}
-                  {...(n.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                >
+                <Link key={n.href} href={n.href}>
                   {n.label}
-                </a>
+                </Link>
               ))}
             </div>
             <div>
-              <h4>Elsewhere</h4>
-              {venue.socials.map((s) => (
-                <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer">
+              <h4>Socials</h4>
+              {socialLinks.map((s) => (
+                <a key={`${s.label}-${s.href}`} href={s.href} target="_blank" rel="noopener noreferrer">
                   {s.label}
                 </a>
               ))}
@@ -57,7 +61,8 @@ export default function Footer() {
           </div>
         </div>
         <div className="fine2">
-          © {new Date().getFullYear()} {venue.name} · {venue.address.city} · {venue.dress.short}
+          © {new Date().getFullYear()} {venue.name} · {venue.address.line1}, {venue.address.city} ·{" "}
+          {venue.dress.short}
         </div>
       </div>
     </footer>

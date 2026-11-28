@@ -1,11 +1,10 @@
+import Link from "next/link";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
-import ReserveForm from "@/components/ReserveForm";
-import { venue, week, gallery, nightOptions } from "@/content/site";
-import { getMenu } from "@/lib/menu";
-import MenuSection from "@/components/MenuSection";
-import { venueClock, venueStatus, tonightRoom, weekRows } from "@/lib/hours";
+import { venue, week } from "@/content/site";
+import { getGallery } from "@/lib/gallery";
+import { venueStatus, tonightRoom } from "@/lib/hours";
 
 export const dynamic = "force-dynamic"; // the room programme follows the venue clock
 
@@ -19,14 +18,11 @@ const TAGLINE_WORDS = [
 ];
 
 export default async function Home() {
-  const [menu] = await Promise.all([getMenu()]);
+  const [{ photos }] = await Promise.all([getGallery()]);
   const now = new Date();
   const status = venueStatus(now);
   const room = tonightRoom(now);
-  const rows = weekRows();
-  const todayDow = venueClock(now).dow;
-  const defaultNight =
-    nightOptions.find((n) => n.dow === todayDow)?.label ?? nightOptions[0].label;
+  const previewPhotos = photos.slice(0, 3);
 
   return (
     <>
@@ -49,13 +45,13 @@ export default async function Home() {
                 Low light, painted walls, and a bar that takes <em>its time</em>.
               </h2>
               <p className="lede rv">
-                Two floors above Djibouti Street, behind an unmarked door, a room has been doing the same thing since{" "}
-                {venue.since}: sofas deep enough to stay in, candles on every table, and music played at the volume a
-                conversation needs.
+                Two floors above Djibouti Street, behind the velvet drapes of Suite 201, a room has been doing the same
+                thing since {venue.since}: velvet seating deep enough to stay in, candles on every table, and music
+                played at the volume a conversation needs.
               </p>
               <p className="rv">
-                The mural on the wall is ours — the woman with the rose was painted for this room. Come at six for one
-                drink after work. Come at eleven when the room fills.
+                The mural on the wall is ours — the woman with the rose was painted for this room. Come at five for a
+                quiet first drink or Friday Happy Hour. Come after ten when the room fills.
               </p>
               <div className="mini rv">
                 <div>
@@ -83,7 +79,42 @@ export default async function Home() {
           </div>
         </section>
 
-        <MenuSection menu={menu} />
+        {/* ==================== REAL ROOM PREVIEW ==================== */}
+        {previewPhotos.length > 0 ? (
+          <section className="sec" style={{ paddingTop: 0 }}>
+            <div className="wrap">
+              <div className="sec-head rv">
+                <div>
+                  <p className="eyebrow">Inside Suite 201</p>
+                  <h2>
+                    Candlelight, velvet &amp; <em>terracotta</em>.
+                  </h2>
+                </div>
+                <Link className="btn" href="/gallery">
+                  Full gallery &amp; socials <span className="arw">→</span>
+                </Link>
+              </div>
+
+              <div className="gal-preview">
+                {previewPhotos.map((p, idx) => (
+                  <Link
+                    key={p.id}
+                    href="/gallery"
+                    className={`frame rv${idx === 0 ? " gal-lead" : ""}`}
+                    style={{ transitionDelay: `${idx * 0.08}s` }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.image_url} alt={p.alt || p.title} loading="lazy" />
+                    <span className="cap">
+                      <span>{p.title}</span>
+                      {p.tag ? <b>{p.tag}</b> : null}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         {/* ==================== QUOTE BAND ==================== */}
         <div className="band">
@@ -99,172 +130,61 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* ==================== THE WEEK ==================== */}
-        <section className="sec" id="week" style={{ paddingTop: "clamp(56px,8vw,104px)" }}>
+        {/* ==================== EXPLORE BY TAB ==================== */}
+        <section className="sec">
           <div className="wrap">
-            <p className="eyebrow rv">The week</p>
-            <h2 className="rv" style={{ maxWidth: "22ch" }}>
-              Three nights, three <em>different</em> rooms.
+            <p className="eyebrow rv">Explore Black Rose</p>
+            <h2 className="rv" style={{ maxWidth: "24ch" }}>
+              Choose your evening from <em>the top</em>.
             </h2>
             <div className="grid3">
-              {week.map((n, i) => (
-                <article className="card rv" key={n.key} style={{ transitionDelay: `${i * 0.1}s` }}>
-                  <div className="k">{n.day}</div>
-                  <h3>{n.title}</h3>
-                  <p>{n.body}</p>
-                  <div className="price">
-                    <span>{n.meta}</span>
-                    <em>{n.badge}</em>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <p className="note rv">
-              <b>To confirm —</b> this weekly programme is a proposal built from what guests describe in reviews, not a
-              published schedule. It needs the owners’ sign-off before it goes live.
-            </p>
-          </div>
-        </section>
-
-        {/* ==================== INSIDE ==================== */}
-        <section className="sec" id="gallery" style={{ paddingTop: 0 }}>
-          <div className="wrap">
-            <p className="eyebrow rv">Inside</p>
-            <div className="gal">
-              <figure className="frame rv">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={gallery[0].src} alt={gallery[0].alt} width={900} height={675} loading="lazy" />
-                <figcaption className="cap">
-                  <span>{gallery[0].cap}</span>
-                  <b>{gallery[0].tag}</b>
-                </figcaption>
-              </figure>
-              <div className="col">
-                <figure className="frame rv" style={{ transitionDelay: ".1s" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={gallery[1].src} alt={gallery[1].alt} width={900} height={1349} loading="lazy" />
-                  <figcaption className="cap">
-                    <span>{gallery[1].cap}</span>
-                    <b>{gallery[1].tag}</b>
-                  </figcaption>
-                </figure>
-                <figure className="frame rv" style={{ transitionDelay: ".18s" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={gallery[2].src} alt={gallery[2].alt} width={600} height={600} loading="lazy" />
-                  <figcaption className="cap">
-                    <span>{gallery[2].cap}</span>
-                    <b>{gallery[2].tag}</b>
-                  </figcaption>
-                </figure>
-              </div>
-            </div>
-            <p className="note rv">
-              <b>Imagery —</b> the mural is the venue’s own artwork, photographed for the brand system. Room and detail
-              shots are to be replaced with the owners’ photography on the night the shoot happens.
-            </p>
-          </div>
-        </section>
-
-        {/* ==================== RESERVE ==================== */}
-        <section className="reserve" id="visit">
-          <div className="bg" aria-hidden="true">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/img/room.jpg" alt="" width={900} height={675} loading="lazy" />
-          </div>
-          <div className="wrap">
-            <div className="panel rv">
-              <div>
-                <p className="eyebrow">Reserve</p>
-                <h2>
-                  Hold a table
-                  <br />
-                  for the evening.
-                </h2>
-                <p style={{ marginBottom: 22 }}>
-                  Tell us the night and the number. We hold the table until nine, and we call back within the hour we
-                  are open.
+              <Link className="card card-link rv" href="/menu">
+                <div className="k">Interactive flipbook</div>
+                <h3>The Menu</h3>
+                <p>
+                  125 cocktails, Ethiopian &amp; sparkling wines, single malts, kitchen plates, and our Friday Happy
+                  Hour chapter.
                 </p>
-                <ReserveForm defaultNight={defaultNight} />
-              </div>
+                <div className="price">
+                  <span>Open flipbook</span>
+                  <em>→</em>
+                </div>
+              </Link>
 
-              <div className="info">
-                <dl>
-                  <dt>Address</dt>
-                  <dd>
-                    <b>{venue.address.line1}</b>
-                    <br />
-                    {venue.address.line2}, {venue.address.city}
-                    <br />
-                    <span style={{ color: "var(--mute)", fontSize: 12.5 }}>
-                      {venue.address.landmark} · parking in the plaza
-                    </span>
-                    <br />
-                    <a href={venue.directionsUrl} target="_blank" rel="noopener noreferrer">
-                      Directions ↗
-                    </a>
-                  </dd>
+              <Link className="card card-link rv" href="/week" style={{ transitionDelay: ".09s" }}>
+                <div className="k">Nights &amp; events</div>
+                <h3>The Week</h3>
+                <p>
+                  {week.length} signature evenings — Tuesday vinyl, Thursday salon, Friday Happy Hour 5–7:30pm, and
+                  late weekend sets.
+                </p>
+                <div className="price">
+                  <span>See the schedule</span>
+                  <em>→</em>
+                </div>
+              </Link>
 
-                  <dt>Hours</dt>
-                  <dd>
-                    <table className="week">
-                      <caption className="sr-only">Opening hours for each day of the week</caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">Days</th>
-                          <th scope="col">Open</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((r) => (
-                          <tr
-                            key={r.window}
-                            className={r.dows.includes(todayDow) ? "is-today" : undefined}
-                          >
-                            <td>
-                              <b>{r.days.join(" · ")}</b>
-                            </td>
-                            <td>{r.window}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <span style={{ display: "block", marginTop: -8, fontSize: 12, color: "var(--mute)" }}>
-                      Kitchen and bar both stop 30 minutes before close.
-                    </span>
-                  </dd>
-
-                  <dt>Dress</dt>
-                  <dd>
-                    <b>{venue.dress.short}</b>
-                    <br />
-                    {venue.dress.long}
-                  </dd>
-
-                  <dt>Private hire</dt>
-                  <dd>
-                    The salon seats eight. <b>Ask at the door, or call ahead.</b>
-                  </dd>
-
-                  <dt>Talk to us</dt>
-                  <dd>
-                    {venue.phones.map((p) => (
-                      <span key={p.tel} style={{ display: "block" }}>
-                        <a href={`tel:${p.tel}`}>{p.label}</a>
-                      </span>
-                    ))}
-                    <a href={`mailto:${venue.email}`}>{venue.email}</a>
-                  </dd>
-                </dl>
-              </div>
+              <Link className="card card-link rv" href="/visit" style={{ transitionDelay: ".18s" }}>
+                <div className="k">Suite 201 · Djibouti Street</div>
+                <h3>Find Us &amp; Reserve</h3>
+                <p>
+                  Hold a table for the evening, check tonight&apos;s hours, or reserve the terracotta corner banquette for
+                  up to eight.
+                </p>
+                <div className="price">
+                  <span>Hold a table</span>
+                  <em>→</em>
+                </div>
+              </Link>
             </div>
           </div>
         </section>
       </main>
 
       <Footer />
-      <a className="pill" href="#visit" id="pill">
+      <Link className="pill" href="/visit" id="pill">
         Reserve a table
-      </a>
+      </Link>
     </>
   );
 }

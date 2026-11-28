@@ -1,7 +1,55 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import seedJson from "../content/blackrose-menu.json";
+import gallerySeedJson from "../content/gallery-seed.json";
+
+export type LocalGallerySpan = "wide" | "tall" | "square";
+export type LocalSocialPlatform =
+  | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "tripadvisor"
+  | "whatsapp"
+  | "other";
+
+export type LocalGalleryPhoto = {
+  id: string;
+  title: string;
+  tag: string;
+  alt: string;
+  image_url: string;
+  span: LocalGallerySpan;
+  sort_order: number;
+  is_visible: boolean;
+};
+
+export type LocalSocialLink = {
+  id: string;
+  platform: LocalSocialPlatform;
+  label: string;
+  handle: string;
+  url: string;
+  sort_order: number;
+  is_visible: boolean;
+};
+
+export type LocalSocialPost = {
+  id: string;
+  platform: Exclude<LocalSocialPlatform, "whatsapp">;
+  caption: string;
+  image_url: string;
+  post_url: string;
+  posted_label: string;
+  sort_order: number;
+  is_visible: boolean;
+};
+
+type GalleryFile = {
+  photos: LocalGalleryPhoto[];
+  socials: LocalSocialLink[];
+  posts: LocalSocialPost[];
+};
 
 export type LocalMenuCategory = {
   id: string;
@@ -60,6 +108,8 @@ function dataDir() {
 }
 
 const menuFilePath = () => path.join(dataDir(), "menu.json");
+const galleryFilePath = () => path.join(dataDir(), "gallery.json");
+const uploadsDirPath = () => path.join(dataDir(), "uploads");
 const reservationsFilePath = () => path.join(dataDir(), "reservations.json");
 const legacyReservationsJsonlPath = () =>
   path.join(dataDir(), "reservations.jsonl");
@@ -467,4 +517,243 @@ export async function localPurgeOldReservations(
     }
     return removed;
   });
+}
+
+/* ----------------------------------------------------- gallery & socials */
+
+function defaultGallerySeed(): GalleryFile {
+  const raw = gallerySeedJson as GalleryFile;
+  return {
+    photos: (raw.photos ?? []).map((p, idx) => ({
+      ...p,
+      sort_order: typeof p.sort_order === "number" ? p.sort_order : (idx + 1) * 10,
+      is_visible: p.is_visible ?? true,
+    })),
+    socials: (raw.socials ?? []).map((s, idx) => ({
+      ...s,
+      sort_order: typeof s.sort_order === "number" ? s.sort_order : (idx + 1) * 10,
+      is_visible: s.is_visible ?? true,
+    })),
+    posts: (raw.posts ?? []).map((p, idx) => ({
+      ...p,
+      sort_order: typeof p.sort_order === "number" ? p.sort_order : (idx + 1) * 10,
+      is_visible: p.is_visible ?? true,
+    })),
+  };
+}
+
+async function readGalleryFile(): Promise<GalleryFile> {
+  const file = galleryFilePath();
+  try {
+    const raw = await readFile(file, "utf8");
+    const parsed = JSON.parse(raw) as Partial<GalleryFile>;
+    if (
+      Array.isArray(parsed.photos) &&
+      Array.isArray(parsed.socials) &&
+      Array.isArray(parsed.posts)
+    ) {
+      return {
+        photos: parsed.photos,
+        socials: parsed.socials,
+        posts: parsed.posts,
+      };
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code !== "ENOENT") throw err;
+  }
+  const seeded = defaultGallerySeed();
+  await atomicWriteJson(file, seeded);
+  return seeded;
+}
+
+export async function localReadGallery(): Promise<GalleryFile> {
+  return withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    return {
+      photos: [...data.photos].sort((a, b) => a.sort_order - b.sort_order),
+      socials: [...data.socials].sort((a, b) => a.sort_order - b.sort_order),
+      posts: [...data.posts].sort((a, b) => a.sort_order - b.sort_order),
+    };
+  });
+}
+
+export async function localCreateGalleryPhoto(
+  input: Omit<LocalGalleryPhoto, "id">,
+): Promise<LocalGalleryPhoto> {
+  return withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const row: LocalGalleryPhoto = { id: randomUUID(), ...input };
+    data.photos.push(row);
+    await atomicWriteJson(galleryFilePath(), data);
+    return row;
+  });
+}
+
+export async function localUpdateGalleryPhoto(
+  id: string,
+  patch: Partial<Omit<LocalGalleryPhoto, "id">>,
+): Promise<LocalGalleryPhoto | null> {
+  return withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const idx = data.photos.findIndex((p) => p.id === id);
+    if (idx === -1) return null;
+    data.photos[idx] = { ...data.photos[idx], ...patch };
+    await atomicWriteJson(galleryFilePath(), data);
+    return data.photos[idx];
+  });
+}
+
+export async function localDeleteGalleryPhoto(id: string): Promise<void> {
+  await withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const target = data.photos.find((p) => p.id === id);
+    data.photos = data.photos.filter((p) => p.id !== id);
+    await atomicWriteJson(galleryFilePath(), data);
+    if (target?.image_url.startsWith("/api/media/")) {
+      const fname = target.image_url.slice("/api/media/".length);
+      const stillUsed =
+        data.photos.some((p) => p.image_url === target.image_url) ||
+        data.posts.some((p) => p.image_url === target.image_url);
+      if (!stillUsed && /^[a-z0-9-]+\.(jpg|jpeg|png|webp)$/.test(fname)) {
+        await unlink(path.join(uploadsDirPath(), fname)).catch(() => {});
+      }
+    }
+  });
+}
+
+export async function localCreateSocialLink(
+  input: Omit<LocalSocialLink, "id">,
+): Promise<LocalSocialLink> {
+  return withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const row: LocalSocialLink = { id: randomUUID(), ...input };
+    data.socials.push(row);
+    await atomicWriteJson(galleryFilePath(), data);
+    return row;
+  });
+}
+
+export async function localUpdateSocialLink(
+  id: string,
+  patch: Partial<Omit<LocalSocialLink, "id">>,
+): Promise<LocalSocialLink | null> {
+  return withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const idx = data.socials.findIndex((s) => s.id === id);
+    if (idx === -1) return null;
+    data.socials[idx] = { ...data.socials[idx], ...patch };
+    await atomicWriteJson(galleryFilePath(), data);
+    return data.socials[idx];
+  });
+}
+
+export async function localDeleteSocialLink(id: string): Promise<void> {
+  await withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    data.socials = data.socials.filter((s) => s.id !== id);
+    await atomicWriteJson(galleryFilePath(), data);
+  });
+}
+
+export async function localCreateSocialPost(
+  input: Omit<LocalSocialPost, "id">,
+): Promise<LocalSocialPost> {
+  return withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const row: LocalSocialPost = { id: randomUUID(), ...input };
+    data.posts.push(row);
+    await atomicWriteJson(galleryFilePath(), data);
+    return row;
+  });
+}
+
+export async function localUpdateSocialPost(
+  id: string,
+  patch: Partial<Omit<LocalSocialPost, "id">>,
+): Promise<LocalSocialPost | null> {
+  return withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const idx = data.posts.findIndex((p) => p.id === id);
+    if (idx === -1) return null;
+    data.posts[idx] = { ...data.posts[idx], ...patch };
+    await atomicWriteJson(galleryFilePath(), data);
+    return data.posts[idx];
+  });
+}
+
+export async function localDeleteSocialPost(id: string): Promise<void> {
+  await withLock(galleryFilePath(), async () => {
+    const data = await readGalleryFile();
+    const target = data.posts.find((p) => p.id === id);
+    data.posts = data.posts.filter((p) => p.id !== id);
+    await atomicWriteJson(galleryFilePath(), data);
+    if (target?.image_url.startsWith("/api/media/")) {
+      const fname = target.image_url.slice("/api/media/".length);
+      const stillUsed =
+        data.photos.some((p) => p.image_url === target.image_url) ||
+        data.posts.some((p) => p.image_url === target.image_url);
+      if (!stillUsed && /^[a-z0-9-]+\.(jpg|jpeg|png|webp)$/.test(fname)) {
+        await unlink(path.join(uploadsDirPath(), fname)).catch(() => {});
+      }
+    }
+  });
+}
+
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+
+function detectImageExtension(buf: Buffer): "jpg" | "png" | "webp" | null {
+  if (buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpg";
+  if (
+    buf[0] === 0x89 &&
+    buf[1] === 0x50 &&
+    buf[2] === 0x4e &&
+    buf[3] === 0x47
+  ) {
+    return "png";
+  }
+  if (
+    buf.subarray(0, 4).toString("ascii") === "RIFF" &&
+    buf.subarray(8, 12).toString("ascii") === "WEBP"
+  ) {
+    return "webp";
+  }
+  return null;
+}
+
+export async function localSaveUploadedImage(buf: Buffer): Promise<string> {
+  if (buf.length === 0) throw new Error("Empty image file");
+  if (buf.length > MAX_UPLOAD_BYTES) {
+    throw new Error("Image is larger than 8 MB");
+  }
+  const ext = detectImageExtension(buf);
+  if (!ext) {
+    throw new Error("Unsupported image format (use JPEG, PNG, or WebP)");
+  }
+  const dir = uploadsDirPath();
+  await mkdir(dir, { recursive: true });
+  const filename = `${randomUUID()}.${ext}`;
+  const full = path.join(dir, filename);
+  await writeFile(full, buf);
+  return `/api/media/${filename}`;
+}
+
+export async function localReadUploadedImage(
+  filename: string,
+): Promise<{ data: Buffer; contentType: string } | null> {
+  if (!/^[a-z0-9-]+\.(jpg|jpeg|png|webp)$/.test(filename)) return null;
+  const full = path.join(uploadsDirPath(), filename);
+  try {
+    const data = await readFile(full);
+    const ext = path.extname(filename).toLowerCase();
+    const contentType =
+      ext === ".png"
+        ? "image/png"
+        : ext === ".webp"
+          ? "image/webp"
+          : "image/jpeg";
+    return { data, contentType };
+  } catch {
+    return null;
+  }
 }
