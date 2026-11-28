@@ -1627,9 +1627,16 @@
 /* Mobile & Narrow Viewport Refinements                                       */
 /* -------------------------------------------------------------------------- */
 
+@media (display-mode: standalone) {
+  .menu-page-shell {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  }
+}
+
 @media (max-width: 760px) {
   .menu-page-shell {
-    padding-top: calc(118px + env(safe-area-inset-top));
+    padding-top: calc(84px + env(safe-area-inset-top));
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
   }
 
   .dmenu-stage {

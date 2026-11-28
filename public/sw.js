@@ -1,6 +1,6 @@
 /* Black Rose Lounge — Progressive Web App Service Worker */
-const STATIC_CACHE = "br-static-v2";
-const PAGES_CACHE = "br-pages-v2";
+const STATIC_CACHE = "br-static-v3";
+const PAGES_CACHE = "br-pages-v3";
 
 const PRECACHE_URLS = [
   "/offline",
