@@ -15,6 +15,10 @@ import { venue } from "@/content/site";
 import type { MenuCategoryWithItems, MenuItem } from "@/lib/menu";
 import "./digital-menu.css";
 
+/* ------------------------------------------------------------------ */
+/* Helpers & Generous Bookbinder Pagination                           */
+/* ------------------------------------------------------------------ */
+
 function formatPriceNumber(cents: number | null | undefined): string | null {
   if (cents === null || cents === undefined) return null;
   const major = cents / 100;
@@ -25,10 +29,6 @@ function formatPriceNumber(cents: number | null | undefined): string | null {
         maximumFractionDigits: 2,
       }).format(major);
 }
-
-/* ------------------------------------------------------------------ */
-/* Helpers & Book Pagination                                          */
-/* ------------------------------------------------------------------ */
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
 const roman = (i: number) => ROMAN[i] ?? String(i + 1);
@@ -56,12 +56,47 @@ type ItemRowEntry =
   | { kind: "group"; label: string }
   | { kind: "item"; item: MenuItem };
 
+type HappyHourEntry =
+  | { kind: "head"; label: string }
+  | {
+      kind: "row";
+      id: string;
+      name: string;
+      regular: number | null;
+      happy: number;
+      isSignature: boolean;
+    };
+
+interface TocEntry {
+  key: string;
+  numeral: string;
+  label: string;
+  kicker: string;
+  pageIndex: number;
+  count: number;
+  isHappyHour?: boolean;
+}
+
 type BookPage =
   | {
       kind: "cover";
       id: string;
       sectionLabel: string;
       railKey: string;
+    }
+  | {
+      kind: "toc";
+      id: string;
+      sectionLabel: string;
+      railKey: string;
+    }
+  | {
+      kind: "salon-guide";
+      id: string;
+      sectionLabel: string;
+      railKey: string;
+      totalItems: number;
+      totalHappyHour: number;
     }
   | {
       kind: "chapter-plate";
@@ -72,9 +107,9 @@ type BookPage =
       category: MenuCategoryWithItems;
       photoSrc: string;
       photoIndex: number;
-      showKey: boolean;
       hasHappyHour: boolean;
       hasSecondary: boolean;
+      groupsSummary: string[];
     }
   | {
       kind: "chapter-list";
@@ -97,32 +132,23 @@ type BookPage =
       railKey: string;
       photoIndex: number;
       totalHappyHourItems: number;
+      chapterNames: string[];
     }
   | {
       kind: "hh-list";
       id: string;
       sectionLabel: string;
       railKey: string;
-      title: string;
-      subtitle: string;
-      groups: Array<{
-        heading: string;
-        items: Array<{
-          id: string;
-          name: string;
-          regular: number | null;
-          happy: number;
-          isSignature: boolean;
-        }>;
-      }>;
+      entries: HappyHourEntry[];
       partIndex: number;
       partCount: number;
     }
   | {
-      kind: "house-notes";
+      kind: "after-dark";
       id: string;
       sectionLabel: string;
       railKey: string;
+      photoIndex: number;
     }
   | {
       kind: "back-cover";
@@ -139,17 +165,27 @@ interface RailChapter {
   count: number;
 }
 
-const MAX_UNITS_PER_PAGE = 15.8;
+/**
+ * Generous vertical unit budget per printed page (~8–10 comfortable items/page)
+ * so every single item, description, group heading, and dual/HH price column
+ * stays effortlessly readable on phones and desktops with zero clipping.
+ */
+const MAX_UNITS_PER_LIST_PAGE = 10.8;
+const MAX_UNITS_PER_HH_PAGE = 12.6;
 
-function rowWeight(entry: ItemRowEntry): number {
-  if (entry.kind === "group") return 1.2;
-  let w = entry.item.name.length > 36 ? 1.4 : 1.0;
-  if (entry.item.description?.trim()) w += 0.65;
+function itemRowWeight(entry: ItemRowEntry): number {
+  if (entry.kind === "group") return 1.15;
+  let w = 1.0;
+  if (entry.item.name.length > 26) w += 0.42;
+  if (entry.item.name.length > 48) w += 0.4;
+  if (entry.item.description?.trim()) {
+    w += entry.item.description.trim().length > 44 ? 1.05 : 0.72;
+  }
+  if (entry.item.is_signature) w += 0.25;
   return w;
 }
 
 function paginateCategoryItems(items: MenuItem[]): ItemRowEntry[][] {
-  // Flatten into ordered group headers + items
   const flat: ItemRowEntry[] = [];
   let currentGroup = "";
   for (const item of items) {
@@ -165,38 +201,121 @@ function paginateCategoryItems(items: MenuItem[]): ItemRowEntry[][] {
 
   if (flat.length === 0) return [[]];
 
-  const totalUnits = flat.reduce((sum, e) => sum + rowWeight(e), 0);
-  const targetPages = Math.max(1, Math.ceil(totalUnits / MAX_UNITS_PER_PAGE));
+  const totalUnits = flat.reduce((sum, e) => sum + itemRowWeight(e), 0);
+  const targetPages = Math.max(1, Math.ceil(totalUnits / MAX_UNITS_PER_LIST_PAGE));
   const softTarget = totalUnits / targetPages;
 
   const pages: ItemRowEntry[][] = [];
   let bucket: ItemRowEntry[] = [];
   let units = 0;
+  let activeGroup = "";
 
   for (let i = 0; i < flat.length; i++) {
     const entry = flat[i];
-    const w = rowWeight(entry);
+    const w = itemRowWeight(entry);
 
     // Keep a group header attached to at least its first item
     const needed =
       entry.kind === "group" && flat[i + 1]
-        ? w + rowWeight(flat[i + 1])
+        ? w + itemRowWeight(flat[i + 1])
         : w;
 
     const remainingPages = targetPages - pages.length - 1;
-    const hitHardCap = bucket.length > 0 && units + needed > MAX_UNITS_PER_PAGE;
+    const hitHardCap = bucket.length > 0 && units + needed > MAX_UNITS_PER_LIST_PAGE;
     const hitBalancedBreak =
       remainingPages > 0 &&
       bucket.length > 0 &&
-      units >= softTarget - 0.5 &&
-      units + needed > softTarget + 0.55;
+      units >= softTarget - 0.55 &&
+      units + needed > softTarget + 0.5;
 
     if (hitHardCap || hitBalancedBreak) {
       pages.push(bucket);
       bucket = [];
       units = 0;
+      // If breaking mid-group, carry a clean continuation heading to the top of the next page
+      if (entry.kind === "item" && activeGroup) {
+        const contLabel = `${activeGroup} (cont.)`;
+        bucket.push({ kind: "group", label: contLabel });
+        units += 1.15;
+      }
     }
 
+    if (entry.kind === "group") {
+      activeGroup = entry.label;
+    } else if (!entry.item.group_name?.trim()) {
+      activeGroup = "";
+    }
+
+    bucket.push(entry);
+    units += w;
+  }
+
+  if (bucket.length > 0) pages.push(bucket);
+  return pages;
+}
+
+function hhEntryWeight(entry: HappyHourEntry): number {
+  if (entry.kind === "head") return 1.15;
+  return entry.name.length > 26 ? 1.35 : 1.0;
+}
+
+function paginateHappyHour(
+  groups: Array<{
+    heading: string;
+    items: Array<{
+      id: string;
+      name: string;
+      regular: number | null;
+      happy: number;
+      isSignature: boolean;
+    }>;
+  }>,
+): HappyHourEntry[][] {
+  const flat: HappyHourEntry[] = [];
+  for (const grp of groups) {
+    flat.push({ kind: "head", label: grp.heading });
+    for (const item of grp.items) {
+      flat.push({ kind: "row", ...item });
+    }
+  }
+  if (flat.length === 0) return [];
+
+  const totalUnits = flat.reduce((sum, e) => sum + hhEntryWeight(e), 0);
+  const targetPages = Math.max(1, Math.ceil(totalUnits / MAX_UNITS_PER_HH_PAGE));
+  const softTarget = totalUnits / targetPages;
+
+  const pages: HappyHourEntry[][] = [];
+  let bucket: HappyHourEntry[] = [];
+  let units = 0;
+  let activeHead = "";
+
+  for (let i = 0; i < flat.length; i++) {
+    const entry = flat[i];
+    const w = hhEntryWeight(entry);
+    const needed =
+      entry.kind === "head" && flat[i + 1]
+        ? w + hhEntryWeight(flat[i + 1])
+        : w;
+
+    const remainingPages = targetPages - pages.length - 1;
+    const hitHardCap = bucket.length > 0 && units + needed > MAX_UNITS_PER_HH_PAGE;
+    const hitBalancedBreak =
+      remainingPages > 0 &&
+      bucket.length > 0 &&
+      units >= softTarget - 0.55 &&
+      units + needed > softTarget + 0.5;
+
+    if (hitHardCap || hitBalancedBreak) {
+      pages.push(bucket);
+      bucket = [];
+      units = 0;
+      if (entry.kind === "row" && activeHead) {
+        bucket.push({ kind: "head", label: `${activeHead} (cont.)` });
+        units += 1.15;
+      }
+    }
+
+    if (entry.kind === "head") activeHead = entry.label;
     bucket.push(entry);
     units += w;
   }
@@ -213,6 +332,13 @@ function buildBook(categories: MenuCategoryWithItems[]) {
     return idx;
   };
 
+  const totalItems = categories.reduce((sum, c) => sum + c.items.length, 0);
+  const totalHappyHour = categories.reduce(
+    (sum, c) =>
+      sum + c.items.filter((i) => i.happy_hour_price_cents != null).length,
+    0,
+  );
+
   const pages: BookPage[] = [
     {
       kind: "cover",
@@ -220,12 +346,26 @@ function buildBook(categories: MenuCategoryWithItems[]) {
       sectionLabel: `${venue.name} — The Menu`,
       railKey: "cover",
     },
+    {
+      kind: "toc",
+      id: "toc",
+      sectionLabel: "Contents · Index",
+      railKey: "toc",
+    },
+    {
+      kind: "salon-guide",
+      id: "salon-guide",
+      sectionLabel: "The Salon · Guide",
+      railKey: "toc",
+      totalItems,
+      totalHappyHour,
+    },
   ];
 
   const rail: RailChapter[] = [];
+  const toc: TocEntry[] = [];
   const itemPageMap = new Map<string, number>();
 
-  // Collect Friday Happy Hour items grouped by chapter
   const hhByChapter: Array<{
     heading: string;
     items: Array<{
@@ -252,11 +392,28 @@ function buildBook(categories: MenuCategoryWithItems[]) {
       cat.items.some((i) => i.secondary_price_cents != null);
     const hasHappyHour = cat.items.some((i) => i.happy_hour_price_cents != null);
 
+    const groupsSummary: string[] = [];
+    for (const item of cat.items) {
+      const g = (item.group_name ?? "").trim();
+      if (g && !groupsSummary.includes(g)) groupsSummary.push(g);
+    }
+
     const chapterStartPage = pages.length;
     rail.push({
       key: railKey,
       numeral,
       label: cat.name,
+      pageIndex: chapterStartPage,
+      count: cat.items.length,
+    });
+    toc.push({
+      key: railKey,
+      numeral,
+      label: cat.name,
+      kicker:
+        groupsSummary.length > 0
+          ? groupsSummary.join(" · ")
+          : cat.kicker || `${cat.items.length} serves`,
       pageIndex: chapterStartPage,
       count: cat.items.length,
     });
@@ -270,9 +427,9 @@ function buildBook(categories: MenuCategoryWithItems[]) {
       category: cat,
       photoSrc,
       photoIndex,
-      showKey: idx === 0,
       hasHappyHour,
       hasSecondary,
+      groupsSummary,
     });
 
     const itemPages = paginateCategoryItems(cat.items);
@@ -317,26 +474,32 @@ function buildBook(categories: MenuCategoryWithItems[]) {
     }
   });
 
-  // Add Friday Happy Hour feature spread when happy-hour prices exist
-  const totalHappyHourItems = hhByChapter.reduce(
-    (sum, g) => sum + g.items.length,
-    0,
-  );
+  // Dedicated Friday Happy Hour chapter — single-column spacious pages (zero truncation)
   let happyHourPageIndex: number | null = null;
-
-  if (totalHappyHourItems > 0) {
+  if (totalHappyHour > 0) {
     const hhPhotoIndex = registerPhoto(
       "/img/menu/chapter-happyhour.jpg",
       "Friday Happy Hour",
       "Every Friday · 5:00 pm – 7:30 pm",
     );
     happyHourPageIndex = pages.length;
+    const chapterNames = hhByChapter.map((g) => g.heading);
+
     rail.push({
       key: "happy-hour",
       numeral: "✦",
       label: "Friday HH",
       pageIndex: happyHourPageIndex,
-      count: totalHappyHourItems,
+      count: totalHappyHour,
+    });
+    toc.push({
+      key: "happy-hour",
+      numeral: "✦",
+      label: "Friday Happy Hour",
+      kicker: "Every Friday · 5:00 pm – 7:30 pm",
+      pageIndex: happyHourPageIndex,
+      count: totalHappyHour,
+      isHappyHour: true,
     });
 
     pages.push({
@@ -345,49 +508,37 @@ function buildBook(categories: MenuCategoryWithItems[]) {
       sectionLabel: "✦ · Friday Happy Hour",
       railKey: "happy-hour",
       photoIndex: hhPhotoIndex,
-      totalHappyHourItems,
+      totalHappyHourItems: totalHappyHour,
+      chapterNames,
     });
 
-    // Split Happy Hour groups cleanly across compact 2-column leaves (<= 24 items per leaf)
-    const hhBuckets: Array<typeof hhByChapter> = [];
-    let currentBucket: typeof hhByChapter = [];
-    let currentCount = 0;
-
-    for (const grp of hhByChapter) {
-      if (currentBucket.length > 0 && currentCount + grp.items.length > 24) {
-        hhBuckets.push(currentBucket);
-        currentBucket = [];
-        currentCount = 0;
-      }
-      currentBucket.push(grp);
-      currentCount += grp.items.length;
-    }
-    if (currentBucket.length > 0) hhBuckets.push(currentBucket);
-
-    hhBuckets.forEach((groups, idx) => {
-      const headings = groups.map((g) => g.heading).join(" & ");
+    const hhPages = paginateHappyHour(hhByChapter);
+    hhPages.forEach((entries, idx) => {
       pages.push({
         kind: "hh-list",
         id: `hh-list-${idx}`,
         sectionLabel: "✦ · Friday Happy Hour",
         railKey: "happy-hour",
-        title: headings,
-        subtitle: "Every Friday · 5:00 pm – 7:30 pm · ETB",
-        groups,
+        entries,
         partIndex: idx,
-        partCount: hhBuckets.length,
+        partCount: hhPages.length,
       });
     });
   }
 
-  // Ensure total page count (including back cover) is ALWAYS EVEN so the
-  // front and back hard covers sit solo on desktop two-page spreads.
+  // Auto-parity editorial page so total book leaves (including hard back cover) is ALWAYS EVEN
   if (pages.length % 2 === 0) {
+    const roomPhotoIdx = registerPhoto(
+      "/img/room.jpg",
+      "The Room, After Dark",
+      "Suite 201 · Djibouti Street · Addis Ababa",
+    );
     pages.push({
-      kind: "house-notes",
-      id: "house-notes",
-      sectionLabel: "House Notes · Salon & Cellar",
-      railKey: "notes",
+      kind: "after-dark",
+      id: "after-dark",
+      sectionLabel: "The Room · After Dark",
+      railKey: "after-dark",
+      photoIndex: roomPhotoIdx,
     });
   }
 
@@ -398,11 +549,11 @@ function buildBook(categories: MenuCategoryWithItems[]) {
     railKey: "back",
   });
 
-  return { pages, rail, photos, itemPageMap, happyHourPageIndex };
+  return { pages, rail, toc, photos, itemPageMap, happyHourPageIndex };
 }
 
 /* ------------------------------------------------------------------ */
-/* Printed Book Page Renderer                                         */
+/* Candlelit Black Rose Printed Page Frame                            */
 /* ------------------------------------------------------------------ */
 
 function PageFrame({
@@ -410,19 +561,28 @@ function PageFrame({
   runningHead,
   runningMeta,
   folio,
-  variant = "paper",
+  variant = "salon",
+  muralWatermark = false,
 }: {
   children: ReactNode;
   runningHead?: ReactNode;
   runningMeta?: ReactNode;
   folio?: string;
-  variant?: "paper" | "cover";
+  variant?: "salon" | "cover";
+  muralWatermark?: boolean;
 }) {
   const isCover = variant === "cover";
   return (
     <div
-      className={`bmk-page ${isCover ? "bmk-page--cover" : "bmk-page--paper"}`}
+      className={`bmk-page ${isCover ? "bmk-page--cover" : "bmk-page--salon"}`}
     >
+      {muralWatermark ? (
+        <div className="bmk-mural-ghost" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/watermark.jpg" alt="" />
+        </div>
+      ) : null}
+
       <div className="bmk-frame-outer" aria-hidden="true" />
       <div className="bmk-frame-inner" aria-hidden="true" />
       <div className="bmk-spine-shade" aria-hidden="true" />
@@ -453,8 +613,10 @@ function PageFrame({
 function renderBookPage(
   page: BookPage,
   pageIndex: number,
+  toc: TocEntry[],
   totalChapters: number,
   totalItems: number,
+  totalPages: number,
 ): ReactNode {
   const folio = String(pageIndex + 1).padStart(2, "0");
 
@@ -481,9 +643,11 @@ function renderBookPage(
             <span />
           </div>
 
-          <p className="bmk-cover-italic">The Menu</p>
+          <p className="bmk-cover-italic">
+            The <em>Menu</em>
+          </p>
           <p className="bmk-cover-stats">
-            {totalChapters} Chapters · {totalItems} Serves · Friday Happy Hour
+            {totalChapters} Chapters · {totalItems} Serves · {totalPages} Pages
           </p>
         </div>
 
@@ -491,14 +655,14 @@ function renderBookPage(
           <button
             type="button"
             data-action="open-menu"
-            className="bmk-cover-cta"
+            className="bmk-cover-cta bmk-cover-cta--solid"
           >
             <span>Open the menu</span>
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.5"
+              strokeWidth="1.7"
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
@@ -517,9 +681,123 @@ function renderBookPage(
     );
   }
 
+  if (page.kind === "toc") {
+    return (
+      <PageFrame
+        runningHead="Black Rose Lounge"
+        runningMeta="Index"
+        folio={folio}
+        muralWatermark
+      >
+        <div className="bmk-toc-wrap">
+          <div className="bmk-eyebrow">
+            <span className="bmk-eyebrow-rule" aria-hidden="true" />
+            <span>The Complete List</span>
+          </div>
+          <h3 className="bmk-page-title">
+            Chapters &amp; <em>Cellar</em>
+          </h3>
+          <p className="bmk-toc-sub">
+            Tap any chapter to turn straight to its pages.
+          </p>
+
+          <div className="bmk-toc-list">
+            {toc.map((entry) => (
+              <button
+                key={entry.key}
+                type="button"
+                data-goto-page={entry.pageIndex}
+                className={`bmk-toc-row${entry.isHappyHour ? " is-hh" : ""}`}
+              >
+                <span className="bmk-toc-num">{entry.numeral}</span>
+                <span className="bmk-toc-mid">
+                  <span className="bmk-toc-name-line">
+                    <strong>{entry.label}</strong>
+                    <span className="bmk-leader" aria-hidden="true" />
+                  </span>
+                  <small>{entry.kicker}</small>
+                </span>
+                <span className="bmk-toc-right">
+                  <b>p.{String(entry.pageIndex + 1).padStart(2, "0")}</b>
+                  <em>{entry.count}</em>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </PageFrame>
+    );
+  }
+
+  if (page.kind === "salon-guide") {
+    return (
+      <PageFrame
+        runningHead="The Salon"
+        runningMeta="Suite 201"
+        folio={folio}
+        muralWatermark
+      >
+        <div className="bmk-guide-wrap">
+          <div className="bmk-eyebrow">
+            <span className="bmk-eyebrow-rule" aria-hidden="true" />
+            <span>Reading the Menu</span>
+          </div>
+          <h3 className="bmk-page-title">
+            House <em>Guide</em>
+          </h3>
+
+          <div className="bmk-guide-sig">
+            <div className="bmk-guide-sig-head">
+              <span>✦ House Signature</span>
+              <b>ETB 445 · Fri HH 356</b>
+            </div>
+            <h4>Black Rose</h4>
+            <p>
+              Ordered by name since {venue.since} — dark, floral, dry.
+            </p>
+          </div>
+
+          <div className="bmk-guide-cards">
+            <div className="bmk-guide-card">
+              <span className="bmk-guide-k">Currency &amp; Taxes</span>
+              <p>
+                All {page.totalItems} prices are in Ethiopian Birr (ETB) and
+                include 15% VAT &amp; 5% Service Charge.
+              </p>
+            </div>
+            <div className="bmk-guide-card">
+              <span className="bmk-guide-k">Key &amp; Columns</span>
+              <p>
+                <b>✦</b> Signature · <b>F</b> Fasting · Dual columns show Shot /
+                Bottle or Full / Half. Glowing{" "}
+                <strong className="bmk-ochre-txt">ochre</strong> marks Friday
+                Happy Hour ({page.totalHappyHour} serves, 5:00–7:30 pm).
+              </p>
+            </div>
+            <div className="bmk-guide-card">
+              <span className="bmk-guide-k">Hours &amp; Cellar</span>
+              <p>
+                Open daily from 5:00 pm (Tue–Sat until 2:00 am; Sun &amp; Mon
+                until 12:30 am). Imported wine &amp; corner banquette tables
+                available on request.
+              </p>
+            </div>
+          </div>
+        </div>
+      </PageFrame>
+    );
+  }
+
   if (page.kind === "chapter-plate") {
-    const { category, numeral, photoSrc, photoIndex, showKey, hasHappyHour, hasSecondary } =
-      page;
+    const {
+      category,
+      numeral,
+      photoSrc,
+      photoIndex,
+      hasHappyHour,
+      hasSecondary,
+      groupsSummary,
+    } = page;
     const pricingTag = hasSecondary
       ? `ETB · ${category.price_label || "Shot"} & ${category.secondary_price_label || "Bottle"}`
       : `ETB · ${category.price_label || "Serve"}`;
@@ -529,11 +807,15 @@ function renderBookPage(
         runningHead={`Chapter ${numeral}`}
         runningMeta={`${category.items.length} serves`}
         folio={folio}
+        muralWatermark
       >
         <div className="bmk-plate-wrap">
           <div className="bmk-plate-head">
             <div className="bmk-plate-titles">
-              <p className="bmk-plate-eyebrow">Chapter {numeral}</p>
+              <div className="bmk-eyebrow">
+                <span className="bmk-eyebrow-rule" aria-hidden="true" />
+                <span>Chapter {numeral}</span>
+              </div>
               <h3 className="bmk-plate-title">{category.name}</h3>
             </div>
             <span className="bmk-plate-roman" aria-hidden="true">
@@ -542,10 +824,7 @@ function renderBookPage(
           </div>
 
           {category.kicker ? (
-            <div className="bmk-plate-tag">
-              <span className="bmk-plate-tag-line" aria-hidden="true" />
-              <p>{category.kicker}</p>
-            </div>
+            <p className="bmk-plate-kicker">{category.kicker}</p>
           ) : null}
 
           <figure
@@ -560,7 +839,7 @@ function renderBookPage(
             <div className="bmk-plate-scrim" aria-hidden="true" />
             <figcaption className="bmk-plate-cap">
               <span>{pricingTag}</span>
-              <span className="bmk-plate-zoom-hint">Tap to inspect</span>
+              <span className="bmk-plate-zoom-hint">Tap to inspect ↗</span>
             </figcaption>
           </figure>
 
@@ -568,30 +847,15 @@ function renderBookPage(
             <p className="bmk-plate-note">{category.note}</p>
           ) : null}
 
-          <div className="bmk-plate-legend">
-            {showKey ? (
-              <>
-                <span className="bmk-key-label">Key</span>
-                <span>
-                  <b>✦</b> Signature
-                </span>
-                <span>
-                  <b>F</b> Fasting
-                </span>
-                <span className="bmk-key-hh">
-                  <b>Ochre</b> Fri Happy Hour
-                </span>
-              </>
-            ) : (
-              <>
-                <span>All prices in ETB · 15% VAT &amp; 5% SC incl.</span>
-                {hasHappyHour ? (
-                  <span className="bmk-key-hh">
-                    <b>Ochre</b> Fri HH (5–7:30pm)
-                  </span>
-                ) : null}
-              </>
-            )}
+          <div className="bmk-plate-pills">
+            {groupsSummary.slice(0, 4).map((g) => (
+              <span key={g} className="bmk-plate-pill">
+                {g}
+              </span>
+            ))}
+            {hasHappyHour ? (
+              <span className="bmk-plate-pill is-hh">✦ Fri Happy Hour</span>
+            ) : null}
           </div>
         </div>
       </PageFrame>
@@ -615,7 +879,11 @@ function renderBookPage(
     return (
       <PageFrame
         runningHead={`${numeral} · ${category.name}`}
-        runningMeta={partCount > 1 ? `Page ${partIndex + 1} of ${partCount}` : `${category.items.length} serves`}
+        runningMeta={
+          partCount > 1
+            ? `Page ${partIndex + 1} of ${partCount}`
+            : `${category.items.length} serves`
+        }
         folio={folio}
       >
         <div className="bmk-list-wrap">
@@ -665,7 +933,10 @@ function renderBookPage(
                         {it.name}
                       </span>
                       {isFasting ? (
-                        <span className="bmk-badge bmk-badge-f" title="Fasting friendly">
+                        <span
+                          className="bmk-badge bmk-badge-f"
+                          title="Fasting friendly"
+                        >
                           F
                         </span>
                       ) : it.badge && !it.is_signature ? (
@@ -709,22 +980,27 @@ function renderBookPage(
         runningHead="Every Friday"
         runningMeta="5:00 pm – 7:30 pm"
         folio={folio}
+        muralWatermark
       >
         <div className="bmk-plate-wrap">
           <div className="bmk-plate-head">
             <div className="bmk-plate-titles">
-              <p className="bmk-plate-eyebrow">Weekly Ritual</p>
-              <h3 className="bmk-plate-title">Friday Happy Hour</h3>
+              <div className="bmk-eyebrow">
+                <span className="bmk-eyebrow-rule" aria-hidden="true" />
+                <span>Weekly Ritual</span>
+              </div>
+              <h3 className="bmk-plate-title">
+                Friday <em>Happy Hour</em>
+              </h3>
             </div>
-            <span className="bmk-plate-roman" aria-hidden="true">
+            <span className="bmk-plate-roman is-hh" aria-hidden="true">
               ✦
             </span>
           </div>
 
-          <div className="bmk-plate-tag">
-            <span className="bmk-plate-tag-line" aria-hidden="true" />
-            <p>Every Friday · 5:00 pm to 7:30 pm</p>
-          </div>
+          <p className="bmk-plate-kicker">
+            Every Friday · 5:00 pm to 7:30 pm · {page.totalHappyHourItems} serves
+          </p>
 
           <figure
             className="bmk-plate-figure"
@@ -742,19 +1018,22 @@ function renderBookPage(
             <div className="bmk-plate-scrim" aria-hidden="true" />
             <figcaption className="bmk-plate-cap">
               <span>{page.totalHappyHourItems} Friday pours</span>
-              <span className="bmk-plate-zoom-hint">Tap to inspect</span>
+              <span className="bmk-plate-zoom-hint">Tap to inspect ↗</span>
             </figcaption>
           </figure>
 
           <p className="bmk-plate-note">
-            Two and a half hours before the weekend picks up — selected house cocktails,
-            single shots, and cold Ethiopian beers at special Friday prices.
+            Two and a half hours before the weekend picks up — selected house
+            cocktails, single shots, and cold Ethiopian beers at special Friday
+            prices.
           </p>
 
-          <div className="bmk-plate-legend">
-            <span className="bmk-key-hh">
-              <b>Turn page →</b> Complete Friday Happy Hour list (ETB)
-            </span>
+          <div className="bmk-plate-pills">
+            {page.chapterNames.map((n) => (
+              <span key={n} className="bmk-plate-pill is-hh">
+                {n}
+              </span>
+            ))}
           </div>
         </div>
       </PageFrame>
@@ -762,124 +1041,121 @@ function renderBookPage(
   }
 
   if (page.kind === "hh-list") {
-    const allRows: Array<
-      | { kind: "head"; label: string }
-      | {
-          kind: "row";
-          id: string;
-          name: string;
-          regular: number | null;
-          happy: number;
-          isSignature: boolean;
-        }
-    > = [];
-    for (const grp of page.groups) {
-      allRows.push({ kind: "head", label: grp.heading });
-      for (const item of grp.items) {
-        allRows.push({ kind: "row", ...item });
-      }
-    }
-
     return (
       <PageFrame
-        runningHead="Friday Happy Hour"
+        runningHead="✦ Friday Happy Hour"
         runningMeta={
           page.partCount > 1
-            ? `Guide ${page.partIndex + 1} of ${page.partCount}`
+            ? `List ${page.partIndex + 1} of ${page.partCount}`
             : "5:00 pm – 7:30 pm"
         }
         folio={folio}
       >
         <div className="bmk-list-wrap">
           <div className="bmk-list-head">
-            <h3 className="bmk-list-title">{page.title}</h3>
+            <h3 className="bmk-list-title">Friday Happy Hour</h3>
             <div className="bmk-col-heads has-hh">
-              <span>Reg</span>
+              <span>Regular</span>
               <span className="is-hh">Fri HH</span>
             </div>
           </div>
 
-          <div className="bmk-hh-grid">
-            {allRows.map((row, i) =>
-              row.kind === "head" ? (
-                <div key={`hhg-${i}-${row.label}`} className="bmk-hh-group">
-                  <span>{row.label}</span>
-                  <i aria-hidden="true" />
-                </div>
-              ) : (
-                <div key={row.id} className="bmk-hh-row">
-                  <span className="bmk-hh-name">
-                    {row.isSignature ? <b className="bmk-sig-star">✦ </b> : null}
-                    {row.name}
-                  </span>
-                  <span className="bmk-hh-nums">
-                    <s className="bmk-hh-reg">
-                      {formatPriceNumber(row.regular) ?? ""}
-                    </s>
-                    <strong className="bmk-hh-price">
-                      {formatPriceNumber(row.happy)}
-                    </strong>
-                  </span>
-                </div>
-              ),
-            )}
+          <div className="bmk-items bmk-items--hh">
+            {page.entries.map((entry, idx) => {
+              if (entry.kind === "head") {
+                return (
+                  <div key={`hhg-${idx}-${entry.label}`} className="bmk-group-head">
+                    <span>{entry.label}</span>
+                    <i aria-hidden="true" />
+                  </div>
+                );
+              }
+              return (
+                <article
+                  key={entry.id}
+                  className={`bmk-item${entry.isSignature ? " is-sig" : ""}`}
+                >
+                  <div className="bmk-item-main">
+                    <div className="bmk-item-name-row">
+                      <span className="bmk-item-name">
+                        {entry.isSignature ? (
+                          <span className="bmk-sig-star" title="House signature">
+                            ✦{" "}
+                          </span>
+                        ) : null}
+                        {entry.name}
+                      </span>
+                      <span className="bmk-leader" aria-hidden="true" />
+                    </div>
+                    <div className="bmk-prices has-hh">
+                      <s className="bmk-hh-reg">
+                        {formatPriceNumber(entry.regular) ?? "—"}
+                      </s>
+                      <span className="bmk-ph">
+                        {formatPriceNumber(entry.happy)}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
       </PageFrame>
     );
   }
 
-  if (page.kind === "house-notes") {
+  if (page.kind === "after-dark") {
     return (
       <PageFrame
-        runningHead="House Notes"
+        runningHead="The Room"
         runningMeta="Suite 201"
         folio={folio}
+        muralWatermark
       >
-        <div className="bmk-notes-wrap">
-          <p className="bmk-plate-eyebrow">The Salon</p>
-          <h3 className="bmk-plate-title">Salon &amp; Cellar Notes</h3>
-          <div className="bmk-notes-rule" aria-hidden="true" />
-
-          <div className="bmk-notes-blocks">
-            <div>
-              <h4>Pricing &amp; Taxes</h4>
-              <p>
-                All menu prices are listed in Ethiopian Birr (ETB) and include 15% VAT and
-                5% Service Charge. Dual-column chapters show Shot / Bottle or Full / Half
-                portions.
-              </p>
-            </div>
-            <div>
-              <h4>Bottle Service &amp; Imported Cellar</h4>
-              <p>
-                Selected imported wines, reserve single malts, and private corner banquette
-                tables are available on request. Ask your host or call ahead for groups of
-                six or more.
-              </p>
-            </div>
-            <div>
-              <h4>Kitchen &amp; Last Orders</h4>
-              <p>
-                Open every evening from 5:00 pm — Tuesday to Saturday until 2:00 am, Sunday
-                and Monday until 12:30 am. Both kitchen and bar call last orders 30 minutes
-                before close.
-              </p>
-            </div>
-            <div>
-              <h4>Dress &amp; Atmosphere</h4>
-              <p>
-                {venue.dress.short}. A quiet, candlelit room designed for unhurried drinks
-                and conversation you can actually hear.
-              </p>
+        <div className="bmk-plate-wrap">
+          <div className="bmk-plate-head">
+            <div className="bmk-plate-titles">
+              <div className="bmk-eyebrow">
+                <span className="bmk-eyebrow-rule" aria-hidden="true" />
+                <span>After Dark</span>
+              </div>
+              <h3 className="bmk-plate-title">
+                Candlelight &amp; <em>Conversation</em>
+              </h3>
             </div>
           </div>
+
+          <figure
+            className="bmk-plate-figure"
+            data-photo-index={page.photoIndex}
+            role="button"
+            tabIndex={0}
+            aria-label="View full-screen photograph of Black Rose Lounge"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/img/room.jpg"
+              alt="Candlelit table at Black Rose Lounge"
+              loading="lazy"
+            />
+            <div className="bmk-plate-scrim" aria-hidden="true" />
+            <figcaption className="bmk-plate-cap">
+              <span>{venue.address.line1}</span>
+              <span className="bmk-plate-zoom-hint">Tap to inspect ↗</span>
+            </figcaption>
+          </figure>
+
+          <p className="bmk-plate-note">
+            {venue.positioning} {venue.dress.short}. Kitchen &amp; bar call last
+            orders 30 minutes before close.
+          </p>
         </div>
       </PageFrame>
     );
   }
 
-  // Back Cover
+  // Hard Back Cover
   return (
     <PageFrame variant="cover">
       <div className="bmk-cover-bg" aria-hidden="true">
@@ -889,10 +1165,15 @@ function renderBookPage(
       </div>
 
       <div className="bmk-cover-center">
-        <div className="bmk-cover-medallion bmk-cover-medallion--sm" aria-hidden="true">
+        <div
+          className="bmk-cover-medallion bmk-cover-medallion--sm"
+          aria-hidden="true"
+        >
           <Mark className="bmk-cover-mark" />
         </div>
-        <p className="bmk-cover-italic bmk-back-title">Until last orders.</p>
+        <p className="bmk-cover-italic bmk-back-title">
+          Until <em>last orders.</em>
+        </p>
 
         <div className="bmk-cover-est">
           <span />
@@ -901,16 +1182,24 @@ function renderBookPage(
         </div>
 
         <p className="bmk-back-body">
-          All prices are in Ethiopian Birr (ETB) and include 15% VAT &amp; 5% Service
-          Charge. Kitchen and bar stop 30 minutes before close. Imported wines and corner
-          banquette reservations are available on request.
+          All prices are in Ethiopian Birr (ETB) and include 15% VAT &amp; 5%
+          Service Charge. Kitchen and bar stop 30 minutes before close. Imported
+          wines and corner banquette tables are available on request.
         </p>
 
         <div className="bmk-back-actions">
-          <a href="/visit" data-action="reserve" className="bmk-cover-cta bmk-cover-cta--solid">
+          <a
+            href="/visit"
+            data-action="reserve"
+            className="bmk-cover-cta bmk-cover-cta--solid"
+          >
             <span>Reserve a table →</span>
           </a>
-          <button type="button" data-action="back-to-cover" className="bmk-cover-cta">
+          <button
+            type="button"
+            data-action="back-to-cover"
+            className="bmk-cover-cta"
+          >
             <span>Back to cover</span>
           </button>
         </div>
@@ -921,9 +1210,7 @@ function renderBookPage(
         <span>
           {venue.address.line1} · {venue.address.line2}
         </span>
-        <span>
-          {venue.phones.map((p) => p.label).join(" · ")}
-        </span>
+        <span>{venue.phones.map((p) => p.label).join(" · ")}</span>
       </div>
     </PageFrame>
   );
@@ -967,7 +1254,6 @@ export default function DigitalMenuBook({
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  /* ---- Build printed DOM nodes once per menu dataset ---------------- */
   const renderedPages = useMemo<ReactNode[]>(() => {
     pageRefs.current = [];
     return book.pages.map((page, index) => (
@@ -981,10 +1267,17 @@ export default function DigitalMenuBook({
           page.kind === "cover" || page.kind === "back-cover" ? "hard" : "soft"
         }
       >
-        {renderBookPage(page, index, categories.length, totalItems)}
+        {renderBookPage(
+          page,
+          index,
+          book.toc,
+          categories.length,
+          totalItems,
+          book.pages.length,
+        )}
       </div>
     ));
-  }, [book.pages, categories.length, totalItems]);
+  }, [book.pages, book.toc, categories.length, totalItems]);
 
   /* ---- Initialise StPageFlip (touch-sensing 3D page curl physics) --- */
   useEffect(() => {
@@ -1009,15 +1302,15 @@ export default function DigitalMenuBook({
         size: "stretch",
         minWidth: 260,
         maxWidth: 540,
-        minHeight: 340,
+        minHeight: 360,
         maxHeight: 820,
         drawShadow: true,
-        flippingTime: reduceMotion ? 0 : 1050,
+        flippingTime: reduceMotion ? 0 : 1020,
         usePortrait: true,
         startZIndex: 20,
         startPage: 0,
         autoSize: true,
-        maxShadowOpacity: 0.46,
+        maxShadowOpacity: 0.52,
         showCover: true,
         mobileScrollSupport: true,
         swipeDistance: 20,
@@ -1071,7 +1364,6 @@ export default function DigitalMenuBook({
         /* already destroyed */
       }
 
-      /* Hand printed page DOM nodes back to React cleanly (StrictMode safe) */
       printed.forEach((page) => {
         if (page.parentNode !== element) element.appendChild(page);
       });
@@ -1086,7 +1378,7 @@ export default function DigitalMenuBook({
     };
   }, [renderedPages]);
 
-  /* ---- Book navigation helpers ------------------------------------- */
+  /* ---- Navigation helpers ------------------------------------------ */
   const turnNext = useCallback(() => {
     flipRef.current?.flipNext("bottom");
   }, []);
@@ -1095,22 +1387,25 @@ export default function DigitalMenuBook({
     flipRef.current?.flipPrev("bottom");
   }, []);
 
-  const goToPage = useCallback((targetIndex: number) => {
-    const flip = flipRef.current;
-    if (!flip) return;
-    const clamped = Math.max(0, Math.min(targetIndex, book.pages.length - 1));
-    if (flip.getState() === "flipping") {
-      flip.turnToPage(clamped);
-      return;
-    }
-    try {
-      flip.flip(clamped, "bottom");
-    } catch {
-      flip.turnToPage(clamped);
-    }
-  }, [book.pages.length]);
+  const goToPage = useCallback(
+    (targetIndex: number) => {
+      const flip = flipRef.current;
+      if (!flip) return;
+      const clamped = Math.max(0, Math.min(targetIndex, book.pages.length - 1));
+      if (flip.getState() === "flipping") {
+        flip.turnToPage(clamped);
+        return;
+      }
+      try {
+        flip.flip(clamped, "bottom");
+      } catch {
+        flip.turnToPage(clamped);
+      }
+    },
+    [book.pages.length],
+  );
 
-  /* ---- Native click delegation inside cloned StPageFlip pages ------ */
+  /* ---- Native click delegation inside StPageFlip pages ------------- */
   useEffect(() => {
     const element = bookRef.current;
     if (!element) return;
@@ -1131,15 +1426,24 @@ export default function DigitalMenuBook({
       if (toCover) {
         event.preventDefault();
         event.stopPropagation();
-        try {
-          flipRef.current?.flip(0, "bottom");
-        } catch {
-          flipRef.current?.turnToPage(0);
+        goToPage(0);
+        return;
+      }
+
+      const gotoEl = target.closest("[data-goto-page]");
+      if (gotoEl) {
+        event.preventDefault();
+        event.stopPropagation();
+        const pageNum = Number(gotoEl.getAttribute("data-goto-page"));
+        if (!Number.isNaN(pageNum) && pageNum >= 0) {
+          goToPage(pageNum);
         }
         return;
       }
 
-      const reserve = target.closest("a[data-action='reserve']") as HTMLAnchorElement | null;
+      const reserve = target.closest(
+        "a[data-action='reserve']",
+      ) as HTMLAnchorElement | null;
       if (reserve) {
         event.stopPropagation();
         return;
@@ -1158,7 +1462,7 @@ export default function DigitalMenuBook({
 
     element.addEventListener("click", handleClick);
     return () => element.removeEventListener("click", handleClick);
-  }, []);
+  }, [goToPage]);
 
   /* ---- Fullscreen toggle ------------------------------------------- */
   useEffect(() => {
@@ -1194,7 +1498,7 @@ export default function DigitalMenuBook({
     return () => window.removeEventListener("keydown", onKey);
   }, [viewerIndex, turnNext, turnPrev, goToPage, book.pages.length]);
 
-  /* ---- Search across all 125 items (click result → flip to page) --- */
+  /* ---- Live Search across ALL items → flip straight to exact page -- */
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -1272,7 +1576,7 @@ export default function DigitalMenuBook({
       <div className="dmenu-glow dmenu-glow--top" aria-hidden="true" />
       <div className="dmenu-glow dmenu-glow--bottom" aria-hidden="true" />
 
-      {/* ---- Top bar: search + quick jumps + fullscreen ---- */}
+      {/* ---- Liquid Glass Top Bar: Search + Quick Jumps + Fullscreen ---- */}
       <div className="dmenu-topbar">
         <div className="dmenu-search-box">
           <svg
@@ -1315,40 +1619,47 @@ export default function DigitalMenuBook({
               ) : (
                 <>
                   <div className="dmenu-search-count">
-                    {searchResults.length} result{searchResults.length === 1 ? "" : "s"} — tap to flip to page
+                    {searchResults.length} result
+                    {searchResults.length === 1 ? "" : "s"} — tap to flip to page
                   </div>
-                  {searchResults.slice(0, 12).map(({ item, categoryName, pageIndex }) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="dmenu-search-hit"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        goToPage(pageIndex);
-                        setQuery("");
-                        setSearchFocused(false);
-                      }}
-                    >
-                      <span className="dmenu-hit-left">
-                        <strong>
-                          {item.is_signature ? "✦ " : ""}
-                          {item.name}
-                        </strong>
-                        <small>
-                          {categoryName}
-                          {item.group_name ? ` · ${item.group_name}` : ""} · p.{pageIndex + 1}
-                        </small>
-                      </span>
-                      <span className="dmenu-hit-right">
-                        {formatPriceNumber(item.price_cents)
-                          ? `ETB ${formatPriceNumber(item.price_cents)}`
-                          : item.price_note || "Ask bar"}
-                        {item.happy_hour_price_cents != null ? (
-                          <em>Fri HH {formatPriceNumber(item.happy_hour_price_cents)}</em>
-                        ) : null}
-                      </span>
-                    </button>
-                  ))}
+                  {searchResults
+                    .slice(0, 14)
+                    .map(({ item, categoryName, pageIndex }) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="dmenu-search-hit"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          goToPage(pageIndex);
+                          setQuery("");
+                          setSearchFocused(false);
+                        }}
+                      >
+                        <span className="dmenu-hit-left">
+                          <strong>
+                            {item.is_signature ? "✦ " : ""}
+                            {item.name}
+                          </strong>
+                          <small>
+                            {categoryName}
+                            {item.group_name ? ` · ${item.group_name}` : ""} · p.
+                            {pageIndex + 1}
+                          </small>
+                        </span>
+                        <span className="dmenu-hit-right">
+                          {formatPriceNumber(item.price_cents)
+                            ? `ETB ${formatPriceNumber(item.price_cents)}`
+                            : item.price_note || "Ask bar"}
+                          {item.happy_hour_price_cents != null ? (
+                            <em>
+                              Fri HH{" "}
+                              {formatPriceNumber(item.happy_hour_price_cents)}
+                            </em>
+                          ) : null}
+                        </span>
+                      </button>
+                    ))}
                 </>
               )}
             </div>
@@ -1362,6 +1673,13 @@ export default function DigitalMenuBook({
             onClick={() => goToPage(0)}
           >
             Cover
+          </button>
+          <button
+            type="button"
+            className={`dmenu-pill-btn${activeRailKey === "toc" ? " is-active" : ""}`}
+            onClick={() => goToPage(1)}
+          >
+            Index
           </button>
           {book.happyHourPageIndex !== null ? (
             <button
@@ -1380,11 +1698,27 @@ export default function DigitalMenuBook({
             title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
           >
             {isFullscreen ? (
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              >
                 <path d="M9 3v6H3M15 21v-6h6" />
               </svg>
             ) : (
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              >
                 <path d="M3 9V3h6M21 15v6h-6" />
               </svg>
             )}
@@ -1408,6 +1742,16 @@ export default function DigitalMenuBook({
       {/* ---- Bottom Dock: Chapter Rail + Page Turn Controls ---- */}
       <div className="dmenu-dock">
         <div className="dmenu-rail" role="tablist" aria-label="Menu chapters">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeRailKey === "toc"}
+            className={`dmenu-rail-btn${activeRailKey === "toc" ? " is-active" : ""}`}
+            onClick={() => goToPage(1)}
+          >
+            <span className="dmenu-rail-num">§</span>
+            <span>Index</span>
+          </button>
           {book.rail.map((ch) => {
             const isActive = activeRailKey === ch.key;
             return (
@@ -1435,7 +1779,16 @@ export default function DigitalMenuBook({
             disabled={atStart}
             aria-label="Previous page"
           >
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="15"
+              height="15"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M15 5l-7 7 7 7" />
             </svg>
             <span>Previous</span>
@@ -1455,7 +1808,16 @@ export default function DigitalMenuBook({
             aria-label="Next page"
           >
             <span>Next</span>
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="15"
+              height="15"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M9 5l7 7-7 7" />
             </svg>
           </button>
