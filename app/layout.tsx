@@ -3,7 +3,12 @@ import "./globals.css";
 import { venue, openingHoursSpec } from "@/content/site";
 import PwaManager from "@/components/PwaManager";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.blkrose.online";
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://www.blkrose.online")
+).replace(/\/$/, "");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -111,3 +111,29 @@ export async function rpc<T>(
   });
   return handle<T>(res);
 }
+
+/** Upload an object to a public Supabase Storage bucket and return its public URL. */
+export async function uploadStorageObject(
+  bucket: string,
+  objectPath: string,
+  data: Buffer,
+  contentType: string,
+): Promise<string> {
+  const safePath = objectPath.replace(/^\/+/, "");
+  const res = await fetch(`${URL_}/storage/v1/object/${bucket}/${safePath}`, {
+    method: "POST",
+    headers: {
+      apikey: KEY,
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": contentType,
+      "x-upsert": "false",
+    },
+    body: new Uint8Array(data),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`supabase storage ${res.status}: ${detail.slice(0, 300)}`);
+  }
+  return `${URL_}/storage/v1/object/public/${bucket}/${safePath}`;
+}

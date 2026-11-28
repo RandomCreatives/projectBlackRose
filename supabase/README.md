@@ -3,23 +3,20 @@
 Project: **`blackrose`** · ref **`mhuhuudlbyyedbbkkmmp`** · region `eu-west-1` · org
 `pntkotjechbfdwrfgbot`.
 
-The two older projects in the same org are **not** this site: `BIS Project`
-(`uoxtbrioyjrmbeeabncw`) is the brand-audit database, and `projects4fun2022@gmail.com`
-(`ydhybuqpoxuzkqfhxfmg`) is inactive. Do not point this app at either.
+The older project in the same org (`BIS Project`, `uoxtbrioyjrmbeeabncw`) is **not** this site.
+Do not point this app at it.
 
-## Schema (already applied)
+## Schema (applied)
 
-`menu_categories` · `menu_items` · `reservations`, plus:
+- `public.menu_categories` — 6 official chapters with `price_label`, `secondary_price_label`, and `image_url`
+- `public.menu_items` — 125 items with `group_name`, `secondary_price_cents`, and `happy_hour_price_cents`
+- `public.reservations` — guest table requests (`purge_old_reservations(keep_days)` defaults to 45 days)
+- `public.gallery_photos` — curated venue photography for `/gallery` and homepage strip
+- `public.social_links` — official venue social profiles
+- `public.social_posts` — featured lounge/social highlights
+- `storage.buckets` → **`gallery-media`** — public bucket (8 MB max, JPEG/PNG/WebP/GIF) used by `/admin/gallery` direct uploads
 
-- `touch_updated_at()` trigger on both menu tables
-- `new_reservation_reference()` — collision-proof `BR-XXXXX`
-- `purge_old_reservations(keep_days)` — defaults to 45
-- unique index `menu_items_unique_name_per_category` on `(category_id, lower(name))`
-
-RLS is **enabled** on all three. Policies allow public *select* of live categories and
-available items only; `reservations` has **no** policy at all, so the anon key can neither
-read nor write it. The site reaches the database exclusively through server code holding the
-service-role key.
+RLS is **enabled** on all public tables. `reservations`, `gallery_photos`, `social_links`, and `social_posts` have no public policies (and `anon`/`authenticated` privileges are revoked); the Next.js server reaches the database and storage bucket exclusively through server code holding `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## Vercel environment
 
@@ -30,7 +27,7 @@ SUPABASE_URL=https://mhuhuudlbyyedbbkkmmp.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role key from the project's API settings>
 ADMIN_SESSION_SECRET=<32+ random chars>
 ADMIN_PASSWORD=<the owners' password>
-NEXT_PUBLIC_SITE_URL=https://www.blkrose.online
+NEXT_PUBLIC_SITE_URL=https://<your-vercel-or-custom-domain>
 ```
 
 Rotating `ADMIN_SESSION_SECRET` signs every admin session out immediately.
