@@ -83,9 +83,13 @@
   min-height: 44px;
 }
 .admin-mk {
-  width: 22px;
-  height: 22px;
-  color: #e9a567;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid rgba(233, 165, 103, 0.42);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   flex: none;
 }
 .admin-brand em { font-style: normal; color: #e9a567; letter-spacing: 0.18em; }
