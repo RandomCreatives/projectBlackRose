@@ -980,10 +980,7 @@ export default function DigitalMenuBook({
                     <span>Shot / Bottle &amp; Full / Half</span>
                   </div>
                   <div className="bm-cover-actions">
-                    <Link
-                      href={variant === "standalone" ? "/#visit" : "#visit"}
-                      className="btn solid"
-                    >
+                    <Link href="/visit" className="btn solid">
                       Reserve a table <span className="arw">→</span>
                     </Link>
                     <button

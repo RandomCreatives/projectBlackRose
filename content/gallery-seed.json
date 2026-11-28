@@ -1,0 +1,116 @@
+{
+  "photos": [
+    {
+      "id": "photo-room-candlelight",
+      "title": "The room, after dark",
+      "tag": "Candlelight",
+      "alt": "Candlelit table with fringed mosaic lamp, fresh red rose, and velvet chairs at Black Rose Lounge",
+      "image_url": "/img/room.jpg",
+      "span": "wide",
+      "sort_order": 10,
+      "is_visible": true
+    },
+    {
+      "id": "photo-banquette-corner",
+      "title": "The corner banquette",
+      "tag": "Reserve",
+      "alt": "Terracotta corner banquette with ornate gilded round mirror, woven tapestry, lit Turkish mosaic sconces, embroidered cushions, candle, and red rose",
+      "image_url": "/img/gallery/banquette-corner.jpg",
+      "span": "wide",
+      "sort_order": 20,
+      "is_visible": true
+    },
+    {
+      "id": "photo-velvet-tables",
+      "title": "Velvet & terracotta",
+      "tag": "Main room",
+      "alt": "Deep crimson and plum velvet chairs around tiled tables with candles, red roses, and the Black Rose menu",
+      "image_url": "/img/gallery/velvet-tables.jpg",
+      "span": "wide",
+      "sort_order": 30,
+      "is_visible": true
+    },
+    {
+      "id": "photo-table-for-two",
+      "title": "A table for two",
+      "tag": "Velvet seating",
+      "alt": "Intimate table set with candle, red rose, and printed Black Rose menu looking toward stained-glass mosaic lamps and terracotta wall",
+      "image_url": "/img/gallery/table-for-two.jpg",
+      "span": "tall",
+      "sort_order": 40,
+      "is_visible": true
+    },
+    {
+      "id": "photo-mosaic-geez",
+      "title": "Mosaic & Ge'ez tilework",
+      "tag": "The details",
+      "alt": "Brass Turkish stained-glass mosaic wall sconce mounted above hand-tiled Ethiopian Ge'ez script cross artwork",
+      "image_url": "/img/gallery/mosaic-geez.jpg",
+      "span": "tall",
+      "sort_order": 50,
+      "is_visible": true
+    },
+    {
+      "id": "photo-main-lounge",
+      "title": "Across the salon",
+      "tag": "Suite 201",
+      "alt": "Wide view of Black Rose Lounge showing the sheer ceiling drape, portrait gallery wall, embroidered banquette, and jewel-toned seating",
+      "image_url": "/img/gallery/main-lounge.jpg",
+      "span": "wide",
+      "sort_order": 60,
+      "is_visible": true
+    }
+  ],
+  "socials": [
+    {
+      "id": "social-facebook",
+      "platform": "facebook",
+      "label": "Facebook",
+      "handle": "@Blackroseaddis1",
+      "url": "https://www.facebook.com/Blackroseaddis1/",
+      "sort_order": 10,
+      "is_visible": true
+    },
+    {
+      "id": "social-tripadvisor",
+      "platform": "tripadvisor",
+      "label": "Tripadvisor",
+      "handle": "Black Rose Lounge · Addis Ababa",
+      "url": "https://www.tripadvisor.com/Restaurant_Review-g293791-d5408589-Reviews-Black_Rose_Lounge-Addis_Ababa.html",
+      "sort_order": 20,
+      "is_visible": true
+    }
+  ],
+  "posts": [
+    {
+      "id": "post-friday-happy-hour",
+      "platform": "facebook",
+      "caption": "Every Friday Happy Hour from 5:00 pm to 7:30 pm — selected cocktails, house pours, and cold beers at special Friday prices.",
+      "image_url": "/img/menu/chapter-happyhour.jpg",
+      "post_url": "/menu",
+      "posted_label": "Every Friday · 5–7:30 pm",
+      "sort_order": 10,
+      "is_visible": true
+    },
+    {
+      "id": "post-corner-banquette",
+      "platform": "facebook",
+      "caption": "Candles lit, mosaic lamps warm, and the corner banquette set for the evening in Suite 201 on Djibouti Street.",
+      "image_url": "/img/gallery/banquette-corner.jpg",
+      "post_url": "https://www.facebook.com/Blackroseaddis1/",
+      "posted_label": "From the lounge",
+      "sort_order": 20,
+      "is_visible": true
+    },
+    {
+      "id": "post-signature-pour",
+      "platform": "tripadvisor",
+      "caption": "“An oasis in hectic Addis Ababa.” Candlelight, a properly made cocktail, and a conversation you can actually hear — since 2003.",
+      "image_url": "/img/room.jpg",
+      "post_url": "https://www.tripadvisor.com/Restaurant_Review-g293791-d5408589-Reviews-Black_Rose_Lounge-Addis_Ababa.html",
+      "posted_label": "Guest reviews · 4.4 ★",
+      "sort_order": 30,
+      "is_visible": true
+    }
+  ]
+}

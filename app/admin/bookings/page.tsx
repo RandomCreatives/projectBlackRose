@@ -136,8 +136,8 @@ export default async function BookingsPage({
                 ) : (
                   <>
                     No table requests yet. Submit one on the{" "}
-                    <Link href="/#visit" target="_blank" rel="noopener">
-                      public reservation form ↗
+                    <Link href="/visit">
+                      public reservation form →
                     </Link>{" "}
                     and it will appear here.
                   </>

@@ -2,7 +2,7 @@
  * Single source of truth for the Black Rose site.
  * Everything the owners are likely to change lives here, not in the markup.
  *
- * VERIFIED = confirmed from a public source during the audit (see website_direction.md).
+ * VERIFIED = confirmed from a public source or official venue signage (IMG_0249 / IMG_0248).
  * UNVERIFIED = illustrative placement copy. Must be replaced or confirmed before go-live.
  */
 
@@ -13,13 +13,13 @@ export const venue = {
   positioning:
     "An after-dark salon on Djibouti Street, since 2003: candlelight, a properly made cocktail, and a conversation you can actually hear.",
   address: {
-    line1: "Yegemiya Plaza, 2nd floor",
+    line1: "Yegemiya Plaza, 2nd floor, Suite 201",
     line2: "Djibouti Street",
     city: "Addis Ababa",
     country: "Ethiopia",
     plusCode: "XQVM+RW7",
     landmark: "Near Saro Maria Hotel",
-    full: "Yegemiya Plaza, 2nd floor, Djibouti Street, Addis Ababa, Ethiopia",
+    full: "Yegemiya Plaza, 2nd floor, Suite 201, Djibouti Street, Addis Ababa, Ethiopia",
   },
   phones: [
     { label: "+251 11 663 9884", tel: "+251116639884", kind: "landline" },
@@ -45,7 +45,7 @@ export const venue = {
   ratings: { google: { score: 4.4, count: 133 }, hotspot: { score: 4.5, count: 126 } },
 } as const;
 
-/** Opening times in minutes from midnight, local (Africa/Addis_Ababa, UTC+3, no DST). Doors at 5pm, every day. */
+/** Opening times in minutes from midnight, local (Africa/Addis_Ababa, UTC+3, no DST). Doors at 5pm, every day. Verified on venue door sign. */
 export const hours = [
   { dow: 0, open: 17 * 60, close: 24 * 60 + 30, label: "Sunday", short: "Sun" },
   { dow: 1, open: 17 * 60, close: 24 * 60 + 30, label: "Monday", short: "Mon" },
@@ -74,7 +74,7 @@ export const openingHoursSpec = hours.map((h) => {
   };
 });
 
-/** The week — UNVERIFIED programme. Needs owner sign-off before launch. */
+/** The week — regular rhythm + special evenings & events live together here (no separate Events tab). */
 export type Night = { key: string; day: string; title: string; body: string; meta: string; badge: string };
 
 export const week: Night[] = [
@@ -95,7 +95,15 @@ export const week: Night[] = [
     badge: "8 seats",
   },
   {
-    key: "fri",
+    key: "fri-hh",
+    day: "Every Friday · Verified",
+    title: "Friday Happy Hour",
+    body: "Selected cocktails, house spirits, and cold beers poured at special Friday prices before the room builds for the weekend.",
+    meta: "5:00pm — 7:30pm",
+    badge: "Selected drinks",
+  },
+  {
+    key: "fri-sat",
     day: "Friday & Saturday",
     title: "After eleven",
     body: "Seated before 9, loud after 11. DJ from 10pm. Cover applies on event nights — published here, always.",
@@ -104,7 +112,48 @@ export const week: Night[] = [
   },
 ];
 
-/** Menu highlights — UNVERIFIED except the house cocktail's name. */
+/** Special evenings & hosted gatherings folded directly into The Week. */
+export type SpecialEvent = {
+  key: string;
+  when: string;
+  title: string;
+  body: string;
+  meta: string;
+  ctaLabel: string;
+  ctaHref: string;
+};
+
+export const specialNights: SpecialEvent[] = [
+  {
+    key: "friday-hh-card",
+    when: "Weekly · Fridays",
+    title: "Golden Hour in Suite 201",
+    body: "44 pours on the Friday Happy Hour chapter — from the Black Rose signature to classic sours, draft-cold beers, and house wines.",
+    meta: "5:00pm — 7:30pm · Open seating",
+    ctaLabel: "See Happy Hour menu",
+    ctaHref: "/menu",
+  },
+  {
+    key: "salon-private",
+    when: "By reservation · Any night",
+    title: "The corner banquette & private tables",
+    body: "Celebrating a birthday, an anniversary, or hosting visiting friends in Addis? Reserve the terracotta banquette for up to eight.",
+    meta: "Held until 9:00pm",
+    ctaLabel: "Reserve the corner",
+    ctaHref: "/visit",
+  },
+  {
+    key: "guest-sets",
+    when: "Selected weekends",
+    title: "Late sets & live acoustic sessions",
+    body: "Occasional guest selectors, soul & Ethio-jazz sets, and intimate acoustic evenings announced first on our socials and listed here.",
+    meta: "From 10:00pm · Follow socials",
+    ctaLabel: "See our socials",
+    ctaHref: "/gallery",
+  },
+];
+
+/** Menu highlights — fallback if DB/local store cannot be read. */
 export type Pour = { kicker: string; name: string; body: string; note: string; price: string; placeholder: boolean };
 
 export const menu: Pour[] = [
@@ -135,16 +184,20 @@ export const menu: Pour[] = [
 ];
 
 export const gallery = [
-  { src: "/img/room.jpg", alt: "The banquette, the lamp and the rose at Black Rose", cap: "The room, 7pm", tag: "Black Rose", span: "wide" },
-  { src: "/img/profile.jpg", alt: "Detail of the painted profile", cap: "Detail", tag: "The mural", span: "tall" },
-  { src: "/img/rose-stamp.jpg", alt: "The black rose from the mural", cap: "One motif", tag: "Since 2003", span: "square" },
+  { src: "/img/room.jpg", alt: "Candlelit table with fringed mosaic lamp and red rose at Black Rose Lounge", cap: "The room, after dark", tag: "Candlelight", span: "wide" },
+  { src: "/img/gallery/banquette-corner.jpg", alt: "Terracotta corner banquette with ornate gold mirror, mosaic sconces, and candle", cap: "The corner banquette", tag: "Reserve", span: "wide" },
+  { src: "/img/gallery/velvet-tables.jpg", alt: "Crimson and plum velvet chairs around tiled tables with candles and red roses", cap: "Velvet & terracotta", tag: "Main room", span: "wide" },
+  { src: "/img/gallery/table-for-two.jpg", alt: "Table set with candle, red rose, and printed Black Rose menu", cap: "A table for two", tag: "Velvet seating", span: "tall" },
+  { src: "/img/gallery/mosaic-geez.jpg", alt: "Brass Turkish mosaic wall sconce above hand-tiled Ethiopian Ge'ez script cross", cap: "Mosaic & Ge'ez tilework", tag: "The details", span: "tall" },
+  { src: "/img/gallery/main-lounge.jpg", alt: "Wide view across Black Rose Lounge in Suite 201", cap: "Across the salon", tag: "Suite 201", span: "wide" },
 ] as const;
 
 export const nav = [
-  { href: "#room", label: "The Room" },
+  { href: "/", label: "The Room" },
   { href: "/menu", label: "Menu" },
-  { href: "#week", label: "The Week" },
-  { href: "#visit", label: "Find Us" },
+  { href: "/week", label: "The Week" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/visit", label: "Find Us" },
 ] as const;
 
 /** Guests / nights / times offered by the reservation form. Keep in sync with lib/hours.ts. */

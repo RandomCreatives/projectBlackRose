@@ -20,11 +20,11 @@ export default function MenuSection({ menu }: { menu: Menu }) {
         </div>
 
         <div className="rv" style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <a className="btn solid" href="#visit">
+          <Link className="btn solid" href="/visit">
             Reserve for the evening <span className="arw">→</span>
-          </a>
+          </Link>
           <Link className="btn" href="/menu">
-            Open full-screen flipbook <span className="arw">↗</span>
+            Open full-screen flipbook <span className="arw">→</span>
           </Link>
         </div>
 

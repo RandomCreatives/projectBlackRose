@@ -352,3 +352,125 @@ details.editor[open] > summary { margin-bottom: 8px; }
   color: var(--a-ink);
 }
 .booking select:focus { outline: 2px solid #c98d4b; outline-offset: 1px; }
+
+/* ---- gallery & socials admin ---- */
+.admin-notice {
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+  border: 1px solid var(--a-line);
+}
+.admin-notice.ok {
+  background: #edf7f0;
+  border-color: #b7dcc3;
+  color: #205232;
+}
+.admin-notice.err {
+  background: #fceeed;
+  border-color: #e5bbb7;
+  color: var(--a-red);
+}
+.admin-add-box {
+  background: #faf7f1;
+  border: 1px dashed #d6cab8;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 12px;
+}
+.admin-gal-list {
+  display: grid;
+  gap: 14px;
+}
+.admin-gal-item {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--a-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.admin-gal-item.is-off,
+.admin-social-row.is-off {
+  opacity: 0.62;
+  background: #faf8f4;
+}
+.admin-gal-thumb {
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--a-line);
+  background: #17120e;
+}
+.admin-gal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.admin-gal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-gal-foot {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-gal-quick {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--a-line);
+}
+.admin-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--a-ink);
+  cursor: pointer;
+}
+.admin-social-list {
+  display: grid;
+  gap: 12px;
+}
+.admin-social-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  padding: 14px;
+  border: 1px solid var(--a-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--a-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--a-ink);
+}
+.admin-field input[type="file"] {
+  font-size: 12.5px;
+  padding: 6px;
+}
+@media (max-width: 780px) {
+  .admin-gal-item { grid-template-columns: 1fr; }
+  .admin-social-row { flex-direction: column; }
+}
+

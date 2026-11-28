@@ -48,9 +48,9 @@ export default function Hero({ initial, initialRoom }: { initial: Status; initia
         </h1>
 
         <div className="cta rv" style={{ transitionDelay: ".5s" }}>
-          <a className="btn solid" href="#visit">
+          <Link className="btn solid" href="/visit">
             Reserve a table <span className="arw">→</span>
-          </a>
+          </Link>
           <Link className="btn" href="/menu">
             Open the menu
           </Link>

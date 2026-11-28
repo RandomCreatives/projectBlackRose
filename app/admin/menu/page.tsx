@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import {
   getMenuAdmin,
@@ -262,18 +263,15 @@ export default async function MenuPage() {
         <div>
           <h1>Menu</h1>
           <p className="admin-muted">
-            {categories.length} chapters · {totalItems} items. Edits here update both the homepage menu book
-            and the standalone table menu at <code>/menu</code>. Untick <b>Show on site</b> to hide an item
-            without deleting it.
+            {categories.length} chapters · {totalItems} items. Edits here update the interactive flipbook
+            menu at <code>/menu</code> immediately. Untick <b>Show on site</b> to hide an item without
+            deleting it.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <a className="admin-btn solid" href="/menu" target="_blank" rel="noopener">
-            Open digital menu ↗
-          </a>
-          <a className="admin-btn" href="/#menu" target="_blank" rel="noopener">
-            See on homepage ↗
-          </a>
+          <Link className="admin-btn solid" href="/menu">
+            Open digital menu →
+          </Link>
         </div>
       </div>
 

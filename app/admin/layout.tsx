@@ -24,8 +24,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           {signedIn ? <AdminTabs /> : null}
 
           <div className="admin-actions">
-            <Link href="/" className="admin-link" target="_blank" rel="noopener">
-              View site ↗
+            <Link href="/" className="admin-link">
+              View site →
             </Link>
             {signedIn ? (
               <form action="/api/admin/logout" method="post">
