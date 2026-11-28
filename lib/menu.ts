@@ -1,5 +1,6 @@
 import { insert, remove, select, storageMode, update } from "./supabase";
 import {
+  defaultMenuSeed,
   localCreateCategory,
   localCreateItem,
   localDeleteCategory,
@@ -54,42 +55,25 @@ export type AdminMenu = {
   uncategorised: MenuItem[];
 };
 
-/** Shown if no database is reachable — the page still renders and still tells the truth. */
-const FALLBACK: Menu = {
-  source: "fallback",
-  categories: [
-    {
-      id: "house",
-      name: "Cocktails",
-      kicker: "House & classic serves",
-      note: "Made the same way every night.",
-      price_label: "Serve",
-      secondary_price_label: "",
-      image_url: "/img/menu/chapter-cocktails.jpg",
-      sort_order: 10,
-      is_active: true,
-      items: [
-        {
-          id: "black-rose",
-          category_id: "house",
-          group_name: "",
-          name: "Black Rose",
-          description:
-            "Ordered by name, made the same way every night for twenty years. Dark, floral, dry.",
-          price_cents: 44500,
-          secondary_price_cents: null,
-          happy_hour_price_cents: 35600,
-          price_note: "",
-          currency: "ETB",
-          badge: "Signature",
-          is_signature: true,
-          is_available: true,
-          sort_order: 10,
-        },
-      ],
-    },
-  ],
-};
+/**
+ * Shown if no database is reachable (or in preview/static builds without env vars) —
+ * built from the complete 6-chapter / 125-item Black Rose Lounge seed so the menu
+ * never collapses to a partial stub.
+ */
+function buildFallbackMenu(): Menu {
+  const { categories, items } = defaultMenuSeed();
+  return {
+    source: "fallback",
+    categories: categories
+      .filter((c) => c.is_active)
+      .map((c) => ({
+        ...c,
+        items: items.filter((i) => i.is_available && i.category_id === c.id),
+      })),
+  };
+}
+
+const FALLBACK: Menu = buildFallbackMenu();
 
 function normalizeCategory(c: Partial<MenuCategory> & { id: string; name: string }): MenuCategory {
   return {

@@ -167,7 +167,7 @@ type SeedCategory = {
   items?: SeedItem[];
 };
 
-function defaultMenuSeed(): MenuFile {
+export function defaultMenuSeed(): MenuFile {
   const categories: LocalMenuCategory[] = [];
   const items: LocalMenuItem[] = [];
   const rawCategories = (seedJson as { categories: SeedCategory[] }).categories;
