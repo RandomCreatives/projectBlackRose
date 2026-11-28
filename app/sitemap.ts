@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://blackroselounge.et";
+const SITE = getSiteUrl();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

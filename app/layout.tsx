@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { venue, openingHoursSpec } from "@/content/site";
+import { getSiteUrl } from "@/lib/site-url";
 import PwaManager from "@/components/PwaManager";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.blkrose.online";
+const SITE_URL = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -699,9 +699,9 @@ export async function localDeleteSocialPost(id: string): Promise<void> {
   });
 }
 
-const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-function detectImageExtension(buf: Buffer): "jpg" | "png" | "webp" | null {
+export function detectImageExtension(buf: Buffer): "jpg" | "png" | "webp" | null {
   if (buf.length < 12) return null;
   if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpg";
   if (

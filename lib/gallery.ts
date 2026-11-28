@@ -1,7 +1,9 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import gallerySeedJson from "@/content/gallery-seed.json";
-import { insert, remove, select, storageMode, update } from "./supabase";
+import { insert, remove, select, storageMode, update, uploadStorageObject } from "./supabase";
 import {
+  detectImageExtension,
   localCreateGalleryPhoto,
   localCreateSocialLink,
   localCreateSocialPost,
@@ -13,6 +15,7 @@ import {
   localUpdateGalleryPhoto,
   localUpdateSocialLink,
   localUpdateSocialPost,
+  MAX_UPLOAD_BYTES,
   type LocalGalleryPhoto,
   type LocalGallerySpan,
   type LocalSocialLink,
@@ -127,8 +130,21 @@ export async function saveGalleryUpload(buf: Buffer): Promise<string> {
   if (storageMode === "local") {
     return localSaveUploadedImage(buf);
   }
+  if (storageMode === "supabase") {
+    if (buf.length === 0) throw new Error("Empty image file");
+    if (buf.length > MAX_UPLOAD_BYTES) {
+      throw new Error("Image is larger than 8 MB");
+    }
+    const ext = detectImageExtension(buf);
+    if (!ext) {
+      throw new Error("Unsupported image format (use JPEG, PNG, or WebP)");
+    }
+    const contentType =
+      ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+    return uploadStorageObject("gallery-media", `${randomUUID()}.${ext}`, buf, contentType);
+  }
   throw new Error(
-    "Direct file upload requires local mode or Supabase Storage; paste an image URL instead.",
+    "Database is not configured; cannot store uploaded images.",
   );
 }
 
