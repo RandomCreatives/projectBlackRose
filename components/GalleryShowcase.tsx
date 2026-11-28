@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { GalleryPhoto, SocialLink, SocialPost } from "@/lib/gallery";
 
@@ -66,9 +66,12 @@ export default function GalleryShowcase({
   posts: SocialPost[];
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     if (activeIndex === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setActiveIndex(null);
       if (e.key === "ArrowRight") {
@@ -81,7 +84,10 @@ export default function GalleryShowcase({
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [activeIndex, photos.length]);
 
   const activePhoto = activeIndex !== null ? photos[activeIndex] : null;
@@ -248,7 +254,25 @@ export default function GalleryShowcase({
           aria-label={activePhoto.title}
           onClick={() => setActiveIndex(null)}
         >
-          <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="lightbox-inner"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => {
+              touchStartX.current = e.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(e) => {
+              if (touchStartX.current === null || photos.length <= 1) return;
+              const dx = (e.changedTouches[0]?.clientX ?? touchStartX.current) - touchStartX.current;
+              touchStartX.current = null;
+              if (Math.abs(dx) > 45) {
+                setActiveIndex(
+                  dx < 0
+                    ? (activeIndex + 1) % photos.length
+                    : (activeIndex - 1 + photos.length) % photos.length,
+                );
+              }
+            }}
+          >
             <button
               type="button"
               className="lightbox-close"
