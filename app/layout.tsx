@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { venue, openingHoursSpec } from "@/content/site";
+import PwaManager from "@/components/PwaManager";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.blkrose.online";
 
@@ -12,6 +13,15 @@ export const metadata: Metadata = {
   },
   description: venue.positioning,
   applicationName: venue.name,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Black Rose",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   keywords: [
     "Black Rose Lounge",
     "cocktail bar Addis Ababa",
@@ -99,6 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         {children}
+        <PwaManager />
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger

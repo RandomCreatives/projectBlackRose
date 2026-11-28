@@ -7,7 +7,7 @@ import ScrollEffects from "@/components/ScrollEffects";
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="site">
-      <a className="skip" href="#room">
+      <a className="skip" href="#main">
         Skip to content
       </a>
       <div id="glow" aria-hidden="true" />

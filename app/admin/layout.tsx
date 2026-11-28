@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Mark from "@/components/Mark";
 import { isSignedIn } from "@/lib/auth";
 import { storageMode } from "@/lib/supabase";
 import AdminTabs from "./AdminTabs";
@@ -18,7 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="admin-bar">
         <div className="admin-wrap">
           <Link href="/admin/bookings" className="admin-brand">
-            <span aria-hidden="true">✦</span> Black Rose <em>Admin</em>
+            <Mark className="admin-mk" />
+            <span>
+              Black Rose <em>Admin</em>
+            </span>
           </Link>
 
           {signedIn ? <AdminTabs /> : null}

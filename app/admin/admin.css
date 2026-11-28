@@ -59,13 +59,16 @@
   position: sticky;
   top: 0;
   z-index: 20;
+  padding-top: env(safe-area-inset-top);
 }
 .admin-bar .admin-wrap {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 56px;
+  gap: 12px 16px;
+  min-height: 58px;
+  padding-top: 6px;
+  padding-bottom: 6px;
   flex-wrap: wrap;
 }
 .admin-brand {
@@ -76,16 +79,34 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  min-height: 44px;
+}
+.admin-mk {
+  width: 22px;
+  height: 22px;
+  color: #e9a567;
+  flex: none;
 }
 .admin-brand em { font-style: normal; color: #e9a567; letter-spacing: 0.18em; }
-.admin-tabs { display: flex; gap: 4px; }
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
 .admin-tabs a {
+  flex: none;
   text-decoration: none;
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 8px 14px;
+  padding: 9px 14px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
   border-radius: 100px;
   color: #d8cdbd;
 }
@@ -160,8 +181,10 @@
 .admin-btn:hover { border-color: #c9bfae; background: #fdfbf7; }
 .admin-btn.solid { background: var(--a-ink); border-color: var(--a-ink); color: #f7f1e6; }
 .admin-btn.solid:hover { background: #2c231b; }
-.admin-btn.ghost { background: transparent; border-color: rgba(255, 255, 255, 0.28); color: #f0e8db; }
-.admin-btn.ghost:hover { background: rgba(255, 255, 255, 0.1); }
+.admin-btn.ghost { background: #faf7f1; border-color: var(--a-line); color: var(--a-ink); }
+.admin-btn.ghost:hover { background: #f1ebe0; }
+.admin-bar .admin-btn.ghost { background: transparent; border-color: rgba(255, 255, 255, 0.28); color: #f0e8db; }
+.admin-bar .admin-btn.ghost:hover { background: rgba(255, 255, 255, 0.1); }
 .admin-btn.sm { min-height: 30px; padding: 4px 10px; font-size: 11px; }
 .admin-btn.danger { color: var(--a-red); border-color: #e7c9c3; }
 .admin-btn.danger:hover { background: #fdf1ef; }
@@ -470,6 +493,29 @@ details.editor[open] > summary { margin-bottom: 8px; }
   padding: 6px;
 }
 @media (max-width: 780px) {
+  .admin-wrap { padding: 0 14px; }
+  .admin-main { padding: 20px 0 calc(64px + env(safe-area-inset-bottom)); }
+  .admin-card { padding: 16px; border-radius: 12px; }
+  .admin h1 { font-size: 25px; }
+  .admin-btn { min-height: 44px; padding: 10px 16px; }
+  .admin-btn.sm { min-height: 38px; padding: 7px 12px; }
+  .admin-tabs { width: 100%; order: 3; padding-bottom: 4px; }
+  .admin-tabs a { min-height: 42px; }
+  .admin-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .admin-filters::-webkit-scrollbar { display: none; }
+  .admin-filters a { flex: none; min-height: 40px; display: inline-flex; align-items: center; }
+  .admin-field input,
+  .admin-field select,
+  .admin-field textarea,
+  .booking select {
+    font-size: 16px;
+    min-height: 44px;
+  }
   .admin-gal-item { grid-template-columns: 1fr; }
   .admin-social-row { flex-direction: column; }
 }

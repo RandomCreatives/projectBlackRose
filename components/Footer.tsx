@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Mark from "./Mark";
+import InstallAppTrigger from "./InstallAppTrigger";
 import { venue, nav } from "@/content/site";
 import { venueStatus } from "@/lib/hours";
 import { getGallery } from "@/lib/gallery";
@@ -48,6 +49,7 @@ export default async function Footer() {
               <a href={venue.mapUrl} target="_blank" rel="noopener noreferrer">
                 Map
               </a>
+              <InstallAppTrigger />
             </div>
             <div>
               <h4>Contact</h4>
