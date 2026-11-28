@@ -170,8 +170,8 @@ interface RailChapter {
  * so every single item, description, group heading, and dual/HH price column
  * stays effortlessly readable on phones and desktops with zero clipping.
  */
-const MAX_UNITS_PER_LIST_PAGE = 10.8;
-const MAX_UNITS_PER_HH_PAGE = 12.6;
+const MAX_UNITS_PER_LIST_PAGE = 11.4;
+const MAX_UNITS_PER_HH_PAGE = 13.0;
 
 function itemRowWeight(entry: ItemRowEntry): number {
   if (entry.kind === "group") return 1.15;
@@ -185,26 +185,7 @@ function itemRowWeight(entry: ItemRowEntry): number {
   return w;
 }
 
-function paginateCategoryItems(items: MenuItem[]): ItemRowEntry[][] {
-  const flat: ItemRowEntry[] = [];
-  let currentGroup = "";
-  for (const item of items) {
-    const g = (item.group_name ?? "").trim();
-    if (g && g !== currentGroup) {
-      flat.push({ kind: "group", label: g });
-      currentGroup = g;
-    } else if (!g) {
-      currentGroup = "";
-    }
-    flat.push({ kind: "item", item });
-  }
-
-  if (flat.length === 0) return [[]];
-
-  const totalUnits = flat.reduce((sum, e) => sum + itemRowWeight(e), 0);
-  const targetPages = Math.max(1, Math.ceil(totalUnits / MAX_UNITS_PER_LIST_PAGE));
-  const softTarget = totalUnits / targetPages;
-
+function packItemPages(flat: ItemRowEntry[], cap: number): ItemRowEntry[][] {
   const pages: ItemRowEntry[][] = [];
   let bucket: ItemRowEntry[] = [];
   let units = 0;
@@ -213,29 +194,17 @@ function paginateCategoryItems(items: MenuItem[]): ItemRowEntry[][] {
   for (let i = 0; i < flat.length; i++) {
     const entry = flat[i];
     const w = itemRowWeight(entry);
-
-    // Keep a group header attached to at least its first item
     const needed =
       entry.kind === "group" && flat[i + 1]
         ? w + itemRowWeight(flat[i + 1])
         : w;
 
-    const remainingPages = targetPages - pages.length - 1;
-    const hitHardCap = bucket.length > 0 && units + needed > MAX_UNITS_PER_LIST_PAGE;
-    const hitBalancedBreak =
-      remainingPages > 0 &&
-      bucket.length > 0 &&
-      units >= softTarget - 0.55 &&
-      units + needed > softTarget + 0.5;
-
-    if (hitHardCap || hitBalancedBreak) {
+    if (bucket.length > 0 && units + needed > cap) {
       pages.push(bucket);
       bucket = [];
       units = 0;
-      // If breaking mid-group, carry a clean continuation heading to the top of the next page
       if (entry.kind === "item" && activeGroup) {
-        const contLabel = `${activeGroup} (cont.)`;
-        bucket.push({ kind: "group", label: contLabel });
+        bucket.push({ kind: "group", label: `${activeGroup} (cont.)` });
         units += 1.15;
       }
     }
@@ -254,9 +223,82 @@ function paginateCategoryItems(items: MenuItem[]): ItemRowEntry[][] {
   return pages;
 }
 
+function paginateCategoryItems(items: MenuItem[]): ItemRowEntry[][] {
+  const flat: ItemRowEntry[] = [];
+  let currentGroup = "";
+  for (const item of items) {
+    const g = (item.group_name ?? "").trim();
+    if (g && g !== currentGroup) {
+      flat.push({ kind: "group", label: g });
+      currentGroup = g;
+    } else if (!g) {
+      currentGroup = "";
+    }
+    flat.push({ kind: "item", item });
+  }
+
+  if (flat.length === 0) return [[]];
+
+  // Find minimum page count at hard cap, then binary-search the lowest cap
+  // that keeps that exact page count so every page is evenly balanced (no 1-item orphans).
+  const minPages = packItemPages(flat, MAX_UNITS_PER_LIST_PAGE);
+  if (minPages.length <= 1) return minPages;
+
+  let lo = 4.0;
+  let hi = MAX_UNITS_PER_LIST_PAGE;
+  let best = minPages;
+  for (let step = 0; step < 12; step++) {
+    const mid = (lo + hi) / 2;
+    const trial = packItemPages(flat, mid);
+    if (trial.length <= minPages.length) {
+      best = trial;
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  return best;
+}
+
 function hhEntryWeight(entry: HappyHourEntry): number {
   if (entry.kind === "head") return 1.15;
   return entry.name.length > 26 ? 1.35 : 1.0;
+}
+
+function packHappyHourPages(
+  flat: HappyHourEntry[],
+  cap: number,
+): HappyHourEntry[][] {
+  const pages: HappyHourEntry[][] = [];
+  let bucket: HappyHourEntry[] = [];
+  let units = 0;
+  let activeHead = "";
+
+  for (let i = 0; i < flat.length; i++) {
+    const entry = flat[i];
+    const w = hhEntryWeight(entry);
+    const needed =
+      entry.kind === "head" && flat[i + 1]
+        ? w + hhEntryWeight(flat[i + 1])
+        : w;
+
+    if (bucket.length > 0 && units + needed > cap) {
+      pages.push(bucket);
+      bucket = [];
+      units = 0;
+      if (entry.kind === "row" && activeHead) {
+        bucket.push({ kind: "head", label: `${activeHead} (cont.)` });
+        units += 1.15;
+      }
+    }
+
+    if (entry.kind === "head") activeHead = entry.label;
+    bucket.push(entry);
+    units += w;
+  }
+
+  if (bucket.length > 0) pages.push(bucket);
+  return pages;
 }
 
 function paginateHappyHour(
@@ -280,48 +322,23 @@ function paginateHappyHour(
   }
   if (flat.length === 0) return [];
 
-  const totalUnits = flat.reduce((sum, e) => sum + hhEntryWeight(e), 0);
-  const targetPages = Math.max(1, Math.ceil(totalUnits / MAX_UNITS_PER_HH_PAGE));
-  const softTarget = totalUnits / targetPages;
+  const minPages = packHappyHourPages(flat, MAX_UNITS_PER_HH_PAGE);
+  if (minPages.length <= 1) return minPages;
 
-  const pages: HappyHourEntry[][] = [];
-  let bucket: HappyHourEntry[] = [];
-  let units = 0;
-  let activeHead = "";
-
-  for (let i = 0; i < flat.length; i++) {
-    const entry = flat[i];
-    const w = hhEntryWeight(entry);
-    const needed =
-      entry.kind === "head" && flat[i + 1]
-        ? w + hhEntryWeight(flat[i + 1])
-        : w;
-
-    const remainingPages = targetPages - pages.length - 1;
-    const hitHardCap = bucket.length > 0 && units + needed > MAX_UNITS_PER_HH_PAGE;
-    const hitBalancedBreak =
-      remainingPages > 0 &&
-      bucket.length > 0 &&
-      units >= softTarget - 0.55 &&
-      units + needed > softTarget + 0.5;
-
-    if (hitHardCap || hitBalancedBreak) {
-      pages.push(bucket);
-      bucket = [];
-      units = 0;
-      if (entry.kind === "row" && activeHead) {
-        bucket.push({ kind: "head", label: `${activeHead} (cont.)` });
-        units += 1.15;
-      }
+  let lo = 4.0;
+  let hi = MAX_UNITS_PER_HH_PAGE;
+  let best = minPages;
+  for (let step = 0; step < 12; step++) {
+    const mid = (lo + hi) / 2;
+    const trial = packHappyHourPages(flat, mid);
+    if (trial.length <= minPages.length) {
+      best = trial;
+      hi = mid;
+    } else {
+      lo = mid;
     }
-
-    if (entry.kind === "head") activeHead = entry.label;
-    bucket.push(entry);
-    units += w;
   }
-
-  if (bucket.length > 0) pages.push(bucket);
-  return pages;
+  return best;
 }
 
 function buildBook(categories: MenuCategoryWithItems[]) {
