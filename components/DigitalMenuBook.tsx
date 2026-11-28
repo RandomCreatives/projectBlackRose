@@ -579,7 +579,7 @@ export default function DigitalMenuBook({
             </span>
             {variant === "embedded" ? (
               <Link href="/menu" className="dmenu-fullscreen-link">
-                Full-screen flipbook ↗
+                Full-screen flipbook →
               </Link>
             ) : null}
           </div>

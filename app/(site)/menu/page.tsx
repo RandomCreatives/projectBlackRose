@@ -17,11 +17,6 @@ export const metadata: Metadata = {
 export default async function DigitalMenuPage() {
   const menu = await getMenu();
   const status = venueStatus();
-  const dotClass = status.open
-    ? status.closesSoon
-      ? "dot soon"
-      : "dot"
-    : "dot shut";
 
   return (
     <>
@@ -30,7 +25,7 @@ export default async function DigitalMenuPage() {
         <div className="wrap">
           <div className="menu-page-status">
             <span>
-              <span className={dotClass} aria-hidden="true" />
+              <span className="dot" aria-hidden="true" />
               <b>{status.headline}</b> · {status.window}
             </span>
             <span className="menu-page-hint">
